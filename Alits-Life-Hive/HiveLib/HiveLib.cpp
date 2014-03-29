@@ -34,10 +34,10 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	std::string playerString = "[]";
 	std::stringstream sqlQuery;
 	sqlQuery << "SELECT ";
-	sqlQuery << "playerid, name, adminlevel, blacklist, donatorlvl, "; // Player
+	sqlQuery << "playerid, name, adminlevel, blacklist, donatorlvl, arrested, "; // Player
 	sqlQuery << "cash, bankacc, "; // Money
-	sqlQuery << "coplevel, cop_licenses, cop_gear, "; // COP
-	sqlQuery << "civ_licenses, civ_gear, "; // Civ
+	sqlQuery << "coplevel, cop_licenses, REPLACE(cop_gear, '\"', ''), "; // COP
+	sqlQuery << "REPLACE(civ_licenses, '\"', ''), REPLACE(civ_gear, '\"', ''), "; // Civ
 	sqlQuery << "reblevel, reb_gear "; // Reb
 	sqlQuery << "FROM players ";
 	sqlQuery << "WHERE playerid = '" << _steamId << "'";
