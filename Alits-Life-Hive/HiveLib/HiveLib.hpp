@@ -1,4 +1,5 @@
 #include <vector>
+#include <string>
 #include <sstream>
 #include <fstream>
 #include <my_global.h>
@@ -8,7 +9,6 @@
 #define HIVELIB_H
 
 #define HIVELIB_MYSQL_CONNECTION_COUNT 4
-
 enum {
 	HIVELIB_MYSQL_CONNECTION_PLAYER = 0,
 	HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE
@@ -25,6 +25,7 @@ private:
 public:
 	HiveLib();
 	~HiveLib();
-	void getPlayer(__int64 SteamId);
+	std::string getPlayer(__int64 SteamId);
 };
+
 #endif

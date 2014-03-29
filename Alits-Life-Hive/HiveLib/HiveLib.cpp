@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "HiveLib.hpp"
+#include "SQF.hpp"
 
 HiveLib::HiveLib() {
 	// Disable debug
@@ -14,13 +15,12 @@ HiveLib::HiveLib() {
 			exit(1);
 		}
 
-		if (mysql_real_connect(con, "localhost", "root", "root", "test2", 3306, NULL, 0) == NULL) {
+		if (mysql_real_connect(con, "localhost", "root", "root", "arma3life", 3306, NULL, 0) == NULL) {
 			exit(1);
 		}
 
 		this->MySQLStack.push_back(con);
 	}
-	
 }
 HiveLib::~HiveLib() {
 	// Close all MySQL connections
@@ -30,7 +30,8 @@ HiveLib::~HiveLib() {
 }
 
 // Get Player
-void HiveLib::getPlayer(__int64 _steamId) {
+std::string HiveLib::getPlayer(__int64 _steamId) {
+	std::string playerString = "[]";
 	std::stringstream sqlQuery;
 	sqlQuery << "SELECT ";
 	sqlQuery << "playerid, name, adminlevel, blacklist, donatorlvl, "; // Player
@@ -43,14 +44,32 @@ void HiveLib::getPlayer(__int64 _steamId) {
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str());
 	}
-		
+
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYER], sqlQuery.str().c_str());
 	if (queryState == 0) {
 		MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYER]);
 		MYSQL_ROW queryRow;
 
 		while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
-
+			SQF playerRow;
+			playerRow.push_str(queryRow[0]);
+			playerRow.push_str(queryRow[1]);
+			playerRow.push_str(queryRow[2]);
+			playerRow.push_str(queryRow[3]);
+			playerRow.push_str(queryRow[4]);
+			playerRow.push_str(queryRow[5]);
+			playerRow.push_str(queryRow[6]);
+			playerRow.push_str(queryRow[7]);
+			playerRow.push_str(queryRow[8]);
+			playerRow.push_str(queryRow[9]);
+			playerRow.push_str(queryRow[10]);
+			playerRow.push_str(queryRow[11]);
+			playerRow.push_str(queryRow[12]);
+			playerRow.push_str(queryRow[13]);
+			playerString = playerRow.toArray();
+			if (this->debugLogResult) {
+				this->log(playerString.c_str());
+			}
 		}
 
 		mysql_free_result(queryResult);
@@ -62,6 +81,8 @@ void HiveLib::getPlayer(__int64 _steamId) {
 		return 1;
 		*/
 	}
+
+	return playerString;
 }
 
 void HiveLib::log(const char *_logMessage) {
