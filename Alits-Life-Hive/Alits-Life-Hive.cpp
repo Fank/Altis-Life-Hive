@@ -27,6 +27,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 
 void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 	std::vector<std::string> rawCmd = split(std::string(function), ':');
+	std::string hiveOutput = "";
 
 	if (rawCmd.size() > 0) {
 		// Init HiveLib
@@ -41,8 +42,10 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 				HiveLibrary = new HiveLib();
 			}
 			if (rawCmd.size() == 2) {
-				HiveLibrary->getPlayer(_atoi64(rawCmd[1].c_str()));
+				hiveOutput = HiveLibrary->getPlayer(_atoi64(rawCmd[1].c_str()));
 			}
 		}
 	}
+
+	strncpy_s(output, outputSize, hiveOutput.c_str(), _TRUNCATE);
 }
