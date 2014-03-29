@@ -10,12 +10,39 @@ extern "C" {
 	__declspec (dllexport) void __stdcall RVExtension(char *output, int outputSize, const char *function);
 }
 
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+	std::stringstream ss(s);
+	std::string item;
+	while (std::getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+	return elems;
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, elems);
+	return elems;
+}
+
 void __stdcall RVExtension(char *output, int outputSize, const char *function) {
-//	strncpy_s(output, outputSize, "IT WORKS!", _TRUNCATE);
-//	if (function == 100) {
-//		HiveLibrary->getPlayer(123456789);
-//	}
-//	else if (function == 0) {
-		HiveLibrary = new HiveLib();
-//	}
+	std::vector<std::string> rawCmd = split(std::string(function), ':');
+
+	if (rawCmd.size() > 0) {
+		// Init HiveLib
+		if (rawCmd[0] == "0") {
+			if (HiveLibrary == NULL) {
+				HiveLibrary = new HiveLib();
+			}
+		}
+		// Get player information
+		else if (rawCmd[0] == "100") {
+			if (HiveLibrary == NULL) {
+				HiveLibrary = new HiveLib();
+			}
+			if (rawCmd.size() == 2) {
+				HiveLibrary->getPlayer(_atoi64(rawCmd[1].c_str()));
+			}
+		}
+	}
 }
