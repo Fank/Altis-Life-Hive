@@ -56,7 +56,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 					it = rawCmd.begin() + 6;
 					it != rawCmd.end();
 				) {
-					playerName << *it << ':';
+					playerName << ((rawCmd.begin() + 6) != it ? ":" : "") << *it;
 					it++;
 				}
 				HiveLibrary->setPlayerCiv(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), (rawCmd[6].compare("0") ? true : false), playerName.str().c_str());
@@ -73,7 +73,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 					it = rawCmd.begin() + 6;
 					it != rawCmd.end();
 				) {
-					playerName << *it << ':';
+					playerName << ((rawCmd.begin() + 6) != it ? ":" : "") << *it;
 					it++;
 				}
 				HiveLibrary->setPlayerReb(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), (rawCmd[6].compare("0") ? true : false), playerName.str().c_str());
@@ -90,7 +90,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 					it = rawCmd.begin() + 6;
 					it != rawCmd.end();
 				) {
-					playerName << *it << ':';
+					playerName << ((rawCmd.begin() + 6) != it ? ":" : "") << *it;
 					it++;
 				}
 				HiveLibrary->setPlayerCop(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), playerName.str().c_str());
