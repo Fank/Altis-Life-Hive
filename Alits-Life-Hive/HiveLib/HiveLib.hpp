@@ -4,11 +4,13 @@
 #include <fstream>
 #include <my_global.h>
 #include <mysql.h>
+#include <errmsg.h>
 
 #ifndef HIVELIB_H
 #define HIVELIB_H
 
 #define HIVELIB_MYSQL_CONNECTION_COUNT 4
+#define HIVELIB_MYSQL_CONNECTION_TRY 3
 enum {
 	HIVELIB_MYSQL_CONNECTION_PLAYER = 0,
 	HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE
@@ -22,6 +24,7 @@ private:
 
 	void log(const char *LogMessage);
 	void log(const char *LogMessage, const char *FunctionName);
+	bool connectDB(int StackIndex);
 
 public:
 	HiveLib();

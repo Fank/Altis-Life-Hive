@@ -15,11 +15,15 @@ HiveLib::HiveLib() {
 			exit(1);
 		}
 
-		if (mysql_real_connect(con, "localhost", "root", "root", "arma3life", 3306, NULL, 0) == NULL) {
+		this->MySQLStack.push_back(con);
+
+		if (!this->connectDB(i)) {
+			std::stringstream errorMsg;
+			errorMsg << "Failed to connect to database: " << mysql_error(this->MySQLStack[i]);
+			this->log(errorMsg.str().c_str(), __FUNCTION__);
 			exit(1);
 		}
 
-		this->MySQLStack.push_back(con);
 	}
 }
 HiveLib::~HiveLib() {
@@ -43,6 +47,19 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	sqlQuery << "WHERE playerid = '" << _steamId << "'";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	int reconnectTry = 0;
+	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYER])) {
+		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
+			exit(1);
+		}
+		else {
+			this->log("Error, attempting reconnection...", __FUNCTION__);
+			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYER);
+			reconnectTry++;
+		}
 	}
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYER], sqlQuery.str().c_str());
@@ -108,6 +125,19 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
 
+	// keep alive check
+	int reconnectTry = 0;
+	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE])) {
+		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
+			exit(1);
+		}
+		else {
+			this->log("Error, attempting reconnection...", __FUNCTION__);
+			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
+			reconnectTry++;
+		}
+	}
+
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
 	if (sqlStatement != NULL) {
 		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
@@ -180,6 +210,12 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 				}
 				else {
 					// success :)
+					if (this->debugLogResult) {
+						std::stringstream result;
+						result << "affected rows " << mysql_stmt_affected_rows(sqlStatement);
+						this->log(result.str().c_str(), __FUNCTION__);
+					}
+
 					mysql_stmt_free_result(sqlStatement);
 				}
 
@@ -218,6 +254,19 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
 
+	// keep alive check
+	int reconnectTry = 0;
+	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE])) {
+		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
+			exit(1);
+		}
+		else {
+			this->log("Error, attempting reconnection...", __FUNCTION__);
+			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
+			reconnectTry++;
+		}
+	}
+
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
 	if (sqlStatement != NULL) {
 		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
@@ -290,6 +339,12 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 				}
 				else {
 					// success :)
+					if (this->debugLogResult) {
+						std::stringstream result;
+						result << "affected rows " << mysql_stmt_affected_rows(sqlStatement);
+						this->log(result.str().c_str(), __FUNCTION__);
+					}
+
 					mysql_stmt_free_result(sqlStatement);
 				}
 
@@ -328,6 +383,19 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
 
+	// keep alive check
+	int reconnectTry = 0;
+	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE])) {
+		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
+			exit(1);
+		}
+		else {
+			this->log("Error, attempting reconnection...", __FUNCTION__);
+			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
+			reconnectTry++;
+		}
+	}
+
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
 	if (sqlStatement != NULL) {
 		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
@@ -400,6 +468,12 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 				}
 				else {
 					// success :)
+					if (this->debugLogResult) {
+						std::stringstream result;
+						result << "affected rows " << mysql_stmt_affected_rows(sqlStatement);
+						this->log(result.str().c_str(), __FUNCTION__);
+					}
+
 					mysql_stmt_free_result(sqlStatement);
 				}
 
@@ -429,4 +503,13 @@ void HiveLib::log(const char *_logMessage, const char *_functionName) {
 	std::stringstream logMessage;
 	logMessage << _functionName << ": " << _logMessage;
 	this->log(logMessage.str().c_str());
+}
+
+bool HiveLib::connectDB(int _stackIndex) {
+	if (!mysql_real_connect(this->MySQLStack[_stackIndex], "localhost", "root", "root", "arma3life", 3306, NULL, 0)) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
