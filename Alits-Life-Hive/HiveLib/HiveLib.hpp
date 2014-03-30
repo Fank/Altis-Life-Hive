@@ -21,11 +21,15 @@ private:
 	bool debugLogResult;
 
 	void log(const char *LogMessage);
+	void log(const char *LogMessage, const char *FunctionName);
 
 public:
 	HiveLib();
 	~HiveLib();
 	std::string getPlayer(__int64 SteamId);
+	void setPlayerCop(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, const char *PlayerName);
+	void setPlayerCiv(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
+	void setPlayerReb(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
 };
 
 #endif
