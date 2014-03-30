@@ -26,7 +26,9 @@ private:
 public:
 	HiveLib();
 	~HiveLib();
+	// Get player
 	std::string getPlayer(__int64 SteamId);
+	// set player
 	void setPlayerCop(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, const char *PlayerName);
 	void setPlayerCiv(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
 	void setPlayerReb(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);

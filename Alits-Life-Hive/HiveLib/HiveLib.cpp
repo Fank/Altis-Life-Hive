@@ -42,7 +42,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	sqlQuery << "FROM players ";
 	sqlQuery << "WHERE playerid = '" << _steamId << "'";
 	if (this->debugLogQuery) {
-		this->log(sqlQuery.str().c_str());
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYER], sqlQuery.str().c_str());
@@ -68,7 +68,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 			playerRow.push_str(queryRow[13]);
 			playerString = playerRow.toArray();
 			if (this->debugLogResult) {
-				this->log(playerString.c_str());
+				this->log(playerString.c_str(), __FUNCTION__);
 			}
 		}
 
@@ -87,16 +87,23 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 
 void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_gear, const char *_licenses, const char *_playerName) {
 	MYSQL_STMT *sqlStatement;
-	MYSQL_BIND sqlParam[3];
+	MYSQL_BIND sqlParam[5];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "UPDATE players SET ";
+	sqlQuery << "INSERT INTO players (playerid, name, cash, bankacc, cop_gear) VALUES ( ";
+	sqlQuery << "'" << _steamId << "', "; // Insert steamId
+	sqlQuery << "?, "; // Insert name
+	sqlQuery << "'" << _cash << "', "; // Insert cash
+	sqlQuery << "'" << _bank << "', "; // Insert bank
+	sqlQuery << "? "; // Insert gear
+	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
 	sqlQuery << "name = ?, ";
 	sqlQuery << "cash = " << _cash << ", ";
 	sqlQuery << "bankacc = " << _bank << ", ";
 	sqlQuery << "cop_gear = ?, ";
-	sqlQuery << "cop_licenses = ? ";
-	sqlQuery << "WHERE playerid = " << _steamId;
+	sqlQuery << "cop_licenses = ?, ";
+	sqlQuery << "lastupdate = NOW()";
+	sqlQuery << ";";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -106,29 +113,45 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
 			memset(sqlParam, 0, sizeof(sqlParam));
 
-			// bind player name
-			long unsigned int playerNameLength;
+			// insert bind player name
+			long unsigned int insertPlayerNameLength;
 			sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
 			sqlParam[0].buffer_length = 32;
 			sqlParam[0].buffer = (char *)_playerName;
 			sqlParam[0].is_null = 0;
-			sqlParam[0].length = &playerNameLength;
+			sqlParam[0].length = &insertPlayerNameLength;
 
-			// bind gear
-			long unsigned int gearLength;
+			// insert bind gear
+			long unsigned int InsertGearLength;
 			sqlParam[1].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[1].buffer_length = 2048;
+			sqlParam[1].buffer_length = 4096;
 			sqlParam[1].buffer = (char *)_gear;
 			sqlParam[1].is_null = 0;
-			sqlParam[1].length = &gearLength;
+			sqlParam[1].length = &InsertGearLength;
 
-			// bind licenses
-			long unsigned int licensesLength;
+			// update bind player name
+			long unsigned int updatePlayerNameLength;
 			sqlParam[2].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[2].buffer_length = 2048;
-			sqlParam[2].buffer = (char *)_licenses;
+			sqlParam[2].buffer_length = 32;
+			sqlParam[2].buffer = (char *)_playerName;
 			sqlParam[2].is_null = 0;
-			sqlParam[2].length = &licensesLength;
+			sqlParam[2].length = &updatePlayerNameLength;
+
+			// update bind gear
+			long unsigned int updateGearLength;
+			sqlParam[3].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[3].buffer_length = 4096;
+			sqlParam[3].buffer = (char *)_gear;
+			sqlParam[3].is_null = 0;
+			sqlParam[3].length = &updateGearLength;
+
+			// update bind licenses
+			long unsigned int updateLicensesLength;
+			sqlParam[4].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[4].buffer_length = 4096;
+			sqlParam[4].buffer = (char *)_licenses;
+			sqlParam[4].is_null = 0;
+			sqlParam[4].length = &updateLicensesLength;
 
 			// bind to statement
 			if (mysql_stmt_bind_param(sqlStatement, sqlParam)) {
@@ -137,9 +160,11 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 				this->log(errorMsg.str().c_str(), __FUNCTION__);
 			}
 			else {
-				playerNameLength = strlen(_playerName);
-				gearLength = strlen(_gear);
-				licensesLength = strlen(_licenses);
+				insertPlayerNameLength = strlen(_playerName);
+				InsertGearLength = strlen(_gear);
+				updatePlayerNameLength = strlen(_playerName);
+				updateGearLength = strlen(_gear);
+				updateLicensesLength = strlen(_licenses);
 
 				// Request meta data information
 				MYSQL_RES *sqlResult = mysql_stmt_result_metadata(sqlStatement);
@@ -155,7 +180,10 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 				}
 				else {
 					// success :)
+					mysql_stmt_free_result(sqlStatement);
 				}
+
+				mysql_free_result(sqlResult);
 			}
 		}
 		else {
@@ -168,17 +196,24 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 }
 void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_gear, const char *_licenses, bool _arrested, const char *_playerName) {
 	MYSQL_STMT *sqlStatement;
-	MYSQL_BIND sqlParam[3];
+	MYSQL_BIND sqlParam[5];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "UPDATE players SET ";
+	sqlQuery << "INSERT INTO players (playerid, name, cash, bankacc, civ_gear) VALUES ( ";
+	sqlQuery << "'" << _steamId << "', "; // Insert steamId
+	sqlQuery << "?, "; // Insert name
+	sqlQuery << "'" << _cash << "', "; // Insert cash
+	sqlQuery << "'" << _bank << "', "; // Insert bank
+	sqlQuery << "? "; // Insert gear
+	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
 	sqlQuery << "name = ?, ";
 	sqlQuery << "cash = " << _cash << ", ";
 	sqlQuery << "bankacc = " << _bank << ", ";
 	sqlQuery << "civ_gear = ?, ";
 	sqlQuery << "civ_licenses = ?, ";
-	sqlQuery << "arrested = " << (_arrested ? 1 : 0) << " ";
-	sqlQuery << "WHERE playerid = " << _steamId;
+	sqlQuery << "arrested = " << (_arrested ? 1 : 0) << ", ";
+	sqlQuery << "lastupdate = NOW()";
+	sqlQuery << ";";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -188,29 +223,45 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
 			memset(sqlParam, 0, sizeof(sqlParam));
 
-			// bind player name
-			long unsigned int playerNameLength;
+			// insert bind player name
+			long unsigned int insertPlayerNameLength;
 			sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
 			sqlParam[0].buffer_length = 32;
 			sqlParam[0].buffer = (char *)_playerName;
 			sqlParam[0].is_null = 0;
-			sqlParam[0].length = &playerNameLength;
+			sqlParam[0].length = &insertPlayerNameLength;
 
-			// bind gear
-			long unsigned int gearLength;
+			// insert bind gear
+			long unsigned int InsertGearLength;
 			sqlParam[1].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[1].buffer_length = 2048;
+			sqlParam[1].buffer_length = 4096;
 			sqlParam[1].buffer = (char *)_gear;
 			sqlParam[1].is_null = 0;
-			sqlParam[1].length = &gearLength;
+			sqlParam[1].length = &InsertGearLength;
 
-			// bind licenses
-			long unsigned int licensesLength;
+			// update bind player name
+			long unsigned int updatePlayerNameLength;
 			sqlParam[2].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[2].buffer_length = 2048;
-			sqlParam[2].buffer = (char *)_licenses;
+			sqlParam[2].buffer_length = 32;
+			sqlParam[2].buffer = (char *)_playerName;
 			sqlParam[2].is_null = 0;
-			sqlParam[2].length = &licensesLength;
+			sqlParam[2].length = &updatePlayerNameLength;
+
+			// update bind gear
+			long unsigned int updateGearLength;
+			sqlParam[3].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[3].buffer_length = 4096;
+			sqlParam[3].buffer = (char *)_gear;
+			sqlParam[3].is_null = 0;
+			sqlParam[3].length = &updateGearLength;
+
+			// update bind licenses
+			long unsigned int updateLicensesLength;
+			sqlParam[4].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[4].buffer_length = 4096;
+			sqlParam[4].buffer = (char *)_licenses;
+			sqlParam[4].is_null = 0;
+			sqlParam[4].length = &updateLicensesLength;
 
 			// bind to statement
 			if (mysql_stmt_bind_param(sqlStatement, sqlParam)) {
@@ -219,9 +270,11 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 				this->log(errorMsg.str().c_str(), __FUNCTION__);
 			}
 			else {
-				playerNameLength = strlen(_playerName);
-				gearLength = strlen(_gear);
-				licensesLength = strlen(_licenses);
+				insertPlayerNameLength = strlen(_playerName);
+				InsertGearLength = strlen(_gear);
+				updatePlayerNameLength = strlen(_playerName);
+				updateGearLength = strlen(_gear);
+				updateLicensesLength = strlen(_licenses);
 
 				// Request meta data information
 				MYSQL_RES *sqlResult = mysql_stmt_result_metadata(sqlStatement);
@@ -237,7 +290,10 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 				}
 				else {
 					// success :)
+					mysql_stmt_free_result(sqlStatement);
 				}
+
+				mysql_free_result(sqlResult);
 			}
 		}
 		else {
@@ -250,17 +306,24 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 }
 void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_gear, const char *_licenses, bool _arrested, const char *_playerName) {
 	MYSQL_STMT *sqlStatement;
-	MYSQL_BIND sqlParam[3];
+	MYSQL_BIND sqlParam[5];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "UPDATE players SET ";
+	sqlQuery << "INSERT INTO players (playerid, name, cash, bankacc, reb_gear) VALUES ( ";
+	sqlQuery << "'" << _steamId << "', "; // Insert steamId
+	sqlQuery << "?, "; // Insert name
+	sqlQuery << "'" << _cash << "', "; // Insert cash
+	sqlQuery << "'" << _bank << "', "; // Insert bank
+	sqlQuery << "? "; // Insert gear
+	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
 	sqlQuery << "name = ?, ";
 	sqlQuery << "cash = " << _cash << ", ";
 	sqlQuery << "bankacc = " << _bank << ", ";
 	sqlQuery << "reb_gear = ?, ";
-	sqlQuery << "civ_licenses = ? ";
-	sqlQuery << "arrested = " << (_arrested ? 1 : 0) << " ";
-	sqlQuery << "WHERE playerid = " << _steamId;
+	sqlQuery << "civ_licenses = ?, ";
+	sqlQuery << "arrested = " << (_arrested ? 1 : 0) << ", ";
+	sqlQuery << "lastupdate = NOW()";
+	sqlQuery << ";";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -270,29 +333,45 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
 			memset(sqlParam, 0, sizeof(sqlParam));
 
-			// bind player name
-			long unsigned int playerNameLength;
+			// insert bind player name
+			long unsigned int insertPlayerNameLength;
 			sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
 			sqlParam[0].buffer_length = 32;
 			sqlParam[0].buffer = (char *)_playerName;
 			sqlParam[0].is_null = 0;
-			sqlParam[0].length = &playerNameLength;
+			sqlParam[0].length = &insertPlayerNameLength;
 
-			// bind gear
-			long unsigned int gearLength;
+			// insert bind gear
+			long unsigned int InsertGearLength;
 			sqlParam[1].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[1].buffer_length = 2048;
+			sqlParam[1].buffer_length = 4096;
 			sqlParam[1].buffer = (char *)_gear;
 			sqlParam[1].is_null = 0;
-			sqlParam[1].length = &gearLength;
+			sqlParam[1].length = &InsertGearLength;
 
-			// bind licenses
-			long unsigned int licensesLength;
+			// update bind player name
+			long unsigned int updatePlayerNameLength;
 			sqlParam[2].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[2].buffer_length = 2048;
-			sqlParam[2].buffer = (char *)_licenses;
+			sqlParam[2].buffer_length = 32;
+			sqlParam[2].buffer = (char *)_playerName;
 			sqlParam[2].is_null = 0;
-			sqlParam[2].length = &licensesLength;
+			sqlParam[2].length = &updatePlayerNameLength;
+
+			// update bind gear
+			long unsigned int updateGearLength;
+			sqlParam[3].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[3].buffer_length = 4096;
+			sqlParam[3].buffer = (char *)_gear;
+			sqlParam[3].is_null = 0;
+			sqlParam[3].length = &updateGearLength;
+
+			// update bind licenses
+			long unsigned int updateLicensesLength;
+			sqlParam[4].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[4].buffer_length = 4096;
+			sqlParam[4].buffer = (char *)_licenses;
+			sqlParam[4].is_null = 0;
+			sqlParam[4].length = &updateLicensesLength;
 
 			// bind to statement
 			if (mysql_stmt_bind_param(sqlStatement, sqlParam)) {
@@ -301,9 +380,11 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 				this->log(errorMsg.str().c_str(), __FUNCTION__);
 			}
 			else {
-				playerNameLength = strlen(_playerName);
-				gearLength = strlen(_gear);
-				licensesLength = strlen(_licenses);
+				insertPlayerNameLength = strlen(_playerName);
+				InsertGearLength = strlen(_gear);
+				updatePlayerNameLength = strlen(_playerName);
+				updateGearLength = strlen(_gear);
+				updateLicensesLength = strlen(_licenses);
 
 				// Request meta data information
 				MYSQL_RES *sqlResult = mysql_stmt_result_metadata(sqlStatement);
@@ -319,7 +400,10 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 				}
 				else {
 					// success :)
+					mysql_stmt_free_result(sqlStatement);
 				}
+
+				mysql_free_result(sqlResult);
 			}
 		}
 		else {
@@ -332,12 +416,15 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 }
 
 void HiveLib::log(const char *_logMessage) {
+	time_t t = time(0);
+	struct tm now;
+	localtime_s(&now, &t);
+
 	std::ofstream logFile;
 	logFile.open("HiveLib.log", std::ios::out | std::ios::app);
-	logFile << _logMessage << std::endl;
+	logFile << "[" << (now.tm_year + 1900) << "-" << (now.tm_mon + 1) << "-" << now.tm_mday << " " << now.tm_hour << ":" << now.tm_min << ":" << now.tm_sec << "] " << _logMessage << std::endl;
 	logFile.close();
 }
-
 void HiveLib::log(const char *_logMessage, const char *_functionName) {
 	std::stringstream logMessage;
 	logMessage << _functionName << ": " << _logMessage;

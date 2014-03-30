@@ -45,18 +45,19 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 				hiveOutput = HiveLibrary->getPlayer(_atoi64(rawCmd[1].c_str()));
 			}
 		}
+
 		// Update civilian information
 		else if (rawCmd[0] == "101") {
 			if (HiveLibrary == NULL) {
 				HiveLibrary = new HiveLib();
 			}
-			if (rawCmd.size() >= 8) {
+			if (rawCmd.size() >= 7) {
 				std::stringstream playerName;
 				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 6;
+					it = rawCmd.begin() + 7;
 					it != rawCmd.end();
 				) {
-					playerName << ((rawCmd.begin() + 6) != it ? ":" : "") << *it;
+					playerName << ((rawCmd.begin() + 7) != it ? ":" : "") << *it;
 					it++;
 				}
 				HiveLibrary->setPlayerCiv(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), (rawCmd[6].compare("0") ? true : false), playerName.str().c_str());
@@ -67,13 +68,13 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 			if (HiveLibrary == NULL) {
 				HiveLibrary = new HiveLib();
 			}
-			if (rawCmd.size() >= 8) {
+			if (rawCmd.size() >= 7) {
 				std::stringstream playerName;
 				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 6;
+					it = rawCmd.begin() + 7;
 					it != rawCmd.end();
 				) {
-					playerName << ((rawCmd.begin() + 6) != it ? ":" : "") << *it;
+					playerName << ((rawCmd.begin() + 7) != it ? ":" : "") << *it;
 					it++;
 				}
 				HiveLibrary->setPlayerReb(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), (rawCmd[6].compare("0") ? true : false), playerName.str().c_str());
@@ -94,6 +95,58 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 					it++;
 				}
 				HiveLibrary->setPlayerCop(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), playerName.str().c_str());
+			}
+		}
+
+		// Add civilian information
+		else if (rawCmd[0] == "111") {
+			if (HiveLibrary == NULL) {
+				HiveLibrary = new HiveLib();
+			}
+			if (rawCmd.size() >= 5) {
+				std::stringstream playerName;
+				for (std::vector<std::string>::iterator
+					it = rawCmd.begin() + 5;
+					it != rawCmd.end();
+				) {
+					playerName << ((rawCmd.begin() + 5) != it ? ":" : "") << *it;
+					it++;
+				}
+				HiveLibrary->setPlayerCiv(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), "[]", "[]", (rawCmd[4].compare("0") ? true : false), playerName.str().c_str());
+			}
+		}
+		// Add resistance information
+		else if (rawCmd[0] == "112") {
+			if (HiveLibrary == NULL) {
+				HiveLibrary = new HiveLib();
+			}
+			if (rawCmd.size() >= 5) {
+				std::stringstream playerName;
+				for (std::vector<std::string>::iterator
+					it = rawCmd.begin() + 5;
+					it != rawCmd.end();
+				) {
+					playerName << ((rawCmd.begin() + 5) != it ? ":" : "") << *it;
+					it++;
+				}
+				HiveLibrary->setPlayerReb(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), "[]", "[]", (rawCmd[4].compare("0") ? true : false), playerName.str().c_str());
+			}
+		}
+		// Add cop information
+		else if (rawCmd[0] == "113") {
+			if (HiveLibrary == NULL) {
+				HiveLibrary = new HiveLib();
+			}
+			if (rawCmd.size() >= 5) {
+				std::stringstream playerName;
+				for (std::vector<std::string>::iterator
+					it = rawCmd.begin() + 5;
+					it != rawCmd.end();
+				) {
+					playerName << ((rawCmd.begin() + 5) != it ? ":" : "") << *it;
+					it++;
+				}
+				HiveLibrary->setPlayerCop(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), "[]", playerName.str().c_str());
 			}
 		}
 	}
