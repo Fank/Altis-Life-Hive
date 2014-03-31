@@ -506,7 +506,7 @@ void HiveLib::log(const char *_logMessage, const char *_functionName) {
 }
 
 bool HiveLib::connectDB(int _stackIndex) {
-	if (!mysql_real_connect(this->MySQLStack[_stackIndex], "localhost", "root", "root", "arma3life", 3306, NULL, 0)) {
+	if (!mysql_real_connect(this->MySQLStack[_stackIndex], "178.63.40.11", "waf_hive_test1", "csharpisttotalscheisse", "arma3life", 3306, NULL, 0)) {
 		return false;
 	}
 	else {
