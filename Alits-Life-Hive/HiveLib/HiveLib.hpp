@@ -2,9 +2,9 @@
 #include <string>
 #include <sstream>
 #include <fstream>
-#include <my_global.h>
 #include <mysql.h>
 #include <errmsg.h>
+#include <ctime>
 
 #ifndef HIVELIB_H
 #define HIVELIB_H
