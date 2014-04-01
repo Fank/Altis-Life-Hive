@@ -42,7 +42,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	sqlQuery << "cash, bankacc, "; // Money
 	sqlQuery << "coplevel, REPLACE(cop_licenses, '\"', ''), REPLACE(cop_gear, '\"', ''), "; // COP
 	sqlQuery << "REPLACE(civ_licenses, '\"', ''), REPLACE(civ_gear, '\"', ''), "; // Civ
-	sqlQuery << "reblevel, reb_gear "; // Reb
+	sqlQuery << "reblevel, REPLACE(reb_gear, '\"', '') "; // Reb
 	sqlQuery << "FROM players ";
 	sqlQuery << "WHERE playerid = '" << _steamId << "'";
 	if (this->debugLogQuery) {
@@ -83,6 +83,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 			playerRow.push_str(queryRow[11]);
 			playerRow.push_str(queryRow[12]);
 			playerRow.push_str(queryRow[13]);
+			playerRow.push_str(queryRow[14]);
 			playerString = playerRow.toArray();
 			if (this->debugLogResult) {
 				this->log(playerString.c_str(), __FUNCTION__);
@@ -375,7 +376,7 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 	sqlQuery << "cash = " << _cash << ", ";
 	sqlQuery << "bankacc = " << _bank << ", ";
 	sqlQuery << "reb_gear = ?, ";
-	sqlQuery << "civ_licenses = ?, ";
+	//sqlQuery << "civ_licenses = ?, ";
 	sqlQuery << "arrested = " << (_arrested ? 1 : 0) << ", ";
 	sqlQuery << "lastupdate = NOW()";
 	sqlQuery << ";";
@@ -433,13 +434,13 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 			sqlParam[3].is_null = 0;
 			sqlParam[3].length = &updateGearLength;
 
-			// update bind licenses
-			long unsigned int updateLicensesLength;
-			sqlParam[4].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[4].buffer_length = 4096;
-			sqlParam[4].buffer = (char *)_licenses;
-			sqlParam[4].is_null = 0;
-			sqlParam[4].length = &updateLicensesLength;
+			//// update bind licenses
+			//long unsigned int updateLicensesLength;
+			//sqlParam[4].buffer_type = MYSQL_TYPE_STRING;
+			//sqlParam[4].buffer_length = 4096;
+			//sqlParam[4].buffer = (char *)_licenses;
+			//sqlParam[4].is_null = 0;
+			//sqlParam[4].length = &updateLicensesLength;
 
 			// bind to statement
 			if (mysql_stmt_bind_param(sqlStatement, sqlParam)) {
@@ -452,7 +453,7 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 				InsertGearLength = strlen(_gear);
 				updatePlayerNameLength = strlen(_playerName);
 				updateGearLength = strlen(_gear);
-				updateLicensesLength = strlen(_licenses);
+				//updateLicensesLength = strlen(_licenses);
 
 				// Request meta data information
 				MYSQL_RES *sqlResult = mysql_stmt_result_metadata(sqlStatement);
@@ -490,13 +491,12 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 }
 
 void HiveLib::log(const char *_logMessage) {
-	time_t t = time(0);
-	struct tm now;
-	localtime_s(&now, &t);
+	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	struct std::tm *time = std::localtime(&currentTime);
 
 	std::ofstream logFile;
 	logFile.open("HiveLib.log", std::ios::out | std::ios::app);
-	logFile << "[" << (now.tm_year + 1900) << "-" << (now.tm_mon + 1) << "-" << now.tm_mday << " " << now.tm_hour << ":" << now.tm_min << ":" << now.tm_sec << "] " << _logMessage << std::endl;
+	logFile << "[" << std::put_time(time, "%Y-%m-%d %H:%M:%S") << "] " << _logMessage << std::endl;
 	logFile.close();
 }
 void HiveLib::log(const char *_logMessage, const char *_functionName) {
@@ -506,7 +506,7 @@ void HiveLib::log(const char *_logMessage, const char *_functionName) {
 }
 
 bool HiveLib::connectDB(int _stackIndex) {
-	if (!mysql_real_connect(this->MySQLStack[_stackIndex], "178.63.40.11", "waf_hive_test1", "csharpisttotalscheisse", "arma3life", 3306, NULL, 0)) {
+	if (!mysql_real_connect(this->MySQLStack[_stackIndex], "localhost", "root", "root", "arma3life", 3306, NULL, 0)) {
 		return false;
 	}
 	else {

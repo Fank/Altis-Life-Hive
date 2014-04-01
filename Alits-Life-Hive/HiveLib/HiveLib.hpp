@@ -5,6 +5,8 @@
 #include <mysql.h>
 #include <errmsg.h>
 #include <ctime>
+#include <iomanip>
+#include <chrono>
 
 #ifndef HIVELIB_H
 #define HIVELIB_H
