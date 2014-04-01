@@ -108,19 +108,19 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 	MYSQL_BIND sqlParam[5];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "INSERT INTO players (playerid, name, cash, bankacc, cop_gear) VALUES ( ";
+	sqlQuery << "INSERT INTO players (`playerid`, `name`, `cash`, `bankacc`, `cop_gear`) VALUES ( ";
 	sqlQuery << "'" << _steamId << "', "; // Insert steamId
 	sqlQuery << "?, "; // Insert name
 	sqlQuery << "'" << _cash << "', "; // Insert cash
 	sqlQuery << "'" << _bank << "', "; // Insert bank
 	sqlQuery << "? "; // Insert gear
 	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
-	sqlQuery << "name = ?, ";
-	sqlQuery << "cash = " << _cash << ", ";
-	sqlQuery << "bankacc = " << _bank << ", ";
-	sqlQuery << "cop_gear = ?, ";
-	sqlQuery << "cop_licenses = ?, ";
-	sqlQuery << "lastupdate = NOW()";
+	sqlQuery << "`name` = ?, ";
+	sqlQuery << "`cash` = " << _cash << ", ";
+	sqlQuery << "`bankacc` = " << _bank << ", ";
+	sqlQuery << "`cop_gear` = ?, ";
+	sqlQuery << "`cop_licenses` = ?, ";
+	sqlQuery << "`lastupdate` = NOW()";
 	sqlQuery << ";";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
@@ -218,6 +218,8 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 					}
 
 					mysql_stmt_free_result(sqlStatement);
+
+					this->updatePlayerAlias(_steamId, _playerName);
 				}
 
 				mysql_free_result(sqlResult);
@@ -236,20 +238,20 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 	MYSQL_BIND sqlParam[5];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "INSERT INTO players (playerid, name, cash, bankacc, civ_gear) VALUES ( ";
+	sqlQuery << "INSERT INTO players (`playerid`, `name`, `cash`, `bankacc`, `civ_gear`) VALUES ( ";
 	sqlQuery << "'" << _steamId << "', "; // Insert steamId
 	sqlQuery << "?, "; // Insert name
 	sqlQuery << "'" << _cash << "', "; // Insert cash
 	sqlQuery << "'" << _bank << "', "; // Insert bank
 	sqlQuery << "? "; // Insert gear
 	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
-	sqlQuery << "name = ?, ";
-	sqlQuery << "cash = " << _cash << ", ";
-	sqlQuery << "bankacc = " << _bank << ", ";
-	sqlQuery << "civ_gear = ?, ";
-	sqlQuery << "civ_licenses = ?, ";
-	sqlQuery << "arrested = " << (_arrested ? 1 : 0) << ", ";
-	sqlQuery << "lastupdate = NOW()";
+	sqlQuery << "`name` = ?, ";
+	sqlQuery << "`cash` = " << _cash << ", ";
+	sqlQuery << "`bankacc` = " << _bank << ", ";
+	sqlQuery << "`civ_gear` = ?, ";
+	sqlQuery << "`civ_licenses` = ?, ";
+	sqlQuery << "`arrested` = " << (_arrested ? 1 : 0) << ", ";
+	sqlQuery << "`lastupdate` = NOW()";
 	sqlQuery << ";";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
@@ -347,6 +349,8 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 					}
 
 					mysql_stmt_free_result(sqlStatement);
+
+					this->updatePlayerAlias(_steamId, _playerName);
 				}
 
 				mysql_free_result(sqlResult);
@@ -365,20 +369,20 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 	MYSQL_BIND sqlParam[5];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "INSERT INTO players (playerid, name, cash, bankacc, reb_gear) VALUES ( ";
+	sqlQuery << "INSERT INTO players (`playerid`, `name`, `cash`, `bankacc`, `reb_gear`) VALUES ( ";
 	sqlQuery << "'" << _steamId << "', "; // Insert steamId
 	sqlQuery << "?, "; // Insert name
 	sqlQuery << "'" << _cash << "', "; // Insert cash
 	sqlQuery << "'" << _bank << "', "; // Insert bank
 	sqlQuery << "? "; // Insert gear
 	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
-	sqlQuery << "name = ?, ";
-	sqlQuery << "cash = " << _cash << ", ";
-	sqlQuery << "bankacc = " << _bank << ", ";
-	sqlQuery << "reb_gear = ?, ";
-	//sqlQuery << "civ_licenses = ?, ";
-	sqlQuery << "arrested = " << (_arrested ? 1 : 0) << ", ";
-	sqlQuery << "lastupdate = NOW()";
+	sqlQuery << "`name` = ?, ";
+	sqlQuery << "`cash` = " << _cash << ", ";
+	sqlQuery << "`bankacc` = " << _bank << ", ";
+	sqlQuery << "`reb_gear` = ?, ";
+	//sqlQuery << "`civ_licenses` = ?, ";
+	sqlQuery << "`arrested` = " << (_arrested ? 1 : 0) << ", ";
+	sqlQuery << "`lastupdate` = NOW()";
 	sqlQuery << ";";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
@@ -476,9 +480,60 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 					}
 
 					mysql_stmt_free_result(sqlStatement);
+
+					this->updatePlayerAlias(_steamId, _playerName);
 				}
 
 				mysql_free_result(sqlResult);
+			}
+		}
+		else {
+			this->log("Could not prepare statement", __FUNCTION__);
+		}
+	}
+	else {
+		this->log("Could not initialize statement handler", __FUNCTION__);
+	}
+}
+
+void HiveLib::updatePlayerAlias(__int64 _steamId, const char *_playerName) {
+	MYSQL_STMT *sqlStatement;
+	MYSQL_BIND sqlParam[1];
+
+	std::stringstream sqlQuery;
+	sqlQuery << "CALL updatePlayerAlias('" << _steamId << "', ?);";
+
+	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
+	if (sqlStatement != NULL) {
+		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
+			memset(sqlParam, 0, sizeof(sqlParam));
+
+			// insert bind player name
+			long unsigned int insertPlayerNameLength;
+			sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[0].buffer_length = 32;
+			sqlParam[0].buffer = (char *)_playerName;
+			sqlParam[0].is_null = 0;
+			sqlParam[0].length = &insertPlayerNameLength;
+
+			// bind to statement
+			if (mysql_stmt_bind_param(sqlStatement, sqlParam)) {
+				std::stringstream errorMsg;
+				errorMsg << "mysql_stmt_bind_param() failed: " << mysql_stmt_error(sqlStatement);
+				this->log(errorMsg.str().c_str(), __FUNCTION__);
+			}
+			else {
+				insertPlayerNameLength = strlen(_playerName);
+
+				if (mysql_stmt_execute(sqlStatement)) {
+					std::stringstream errorMsg;
+					errorMsg << "mysql_stmt_execute(), 1 failed\n" << mysql_stmt_error(sqlStatement);
+					this->log(errorMsg.str().c_str(), __FUNCTION__);
+				}
+				else {
+					// success :)
+					mysql_stmt_free_result(sqlStatement);
+				}
 			}
 		}
 		else {
