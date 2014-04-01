@@ -28,8 +28,6 @@ private:
 	void log(const char *LogMessage, const char *FunctionName);
 	// Database connection
 	bool connectDB(int StackIndex);
-	// 
-	void updatePlayerAlias(__int64 SteamId, const char *PlayerName);
 
 public:
 	HiveLib();
