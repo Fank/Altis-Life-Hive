@@ -41,7 +41,7 @@ std::string getProfileFolder() {
 		commandLine.push_back(utf8);
 	}
 
-	for (std::vector<std::string>::iterator it = commandLine.begin(); it != commandLine.end();) {
+	for (std::vector<std::string>::iterator it = commandLine.begin(); it != commandLine.end(); it++) {
 		std::string starter = "-profiles=";
 		if (it->length() < starter.length()) {
 			continue;
@@ -60,10 +60,8 @@ std::string getProfileFolder() {
 
 // Init HiveLib
 std::string handler0(std::vector<std::string> _param) {
-	std::string profileFolder = getProfileFolder();
-
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		HiveLibrary = new HiveLib((char *)getProfileFolder().c_str());
 	}
 	return "";
 }
@@ -71,7 +69,7 @@ std::string handler0(std::vector<std::string> _param) {
 // Get player information
 std::string handler100(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() == 2) {
 		return HiveLibrary->getPlayer(_atoi64(_param[1].c_str()));
@@ -84,7 +82,7 @@ std::string handler100(std::vector<std::string> _param) {
 // Update civilian information
 std::string handler101(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() >= 7) {
 		std::stringstream playerName;
@@ -109,7 +107,7 @@ std::string handler101(std::vector<std::string> _param) {
 // Update resistance information
 std::string handler102(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() >= 7) {
 		std::stringstream playerName;
@@ -134,7 +132,7 @@ std::string handler102(std::vector<std::string> _param) {
 // Update cop information
 std::string handler103(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() >= 6) {
 		std::stringstream playerName;
@@ -159,7 +157,7 @@ std::string handler103(std::vector<std::string> _param) {
 // Add civilian information
 std::string handler111(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() >= 5) {
 		std::stringstream playerName;
@@ -184,7 +182,7 @@ std::string handler111(std::vector<std::string> _param) {
 // Add resistance information
 std::string handler112(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() >= 5) {
 		std::stringstream playerName;
@@ -209,7 +207,7 @@ std::string handler112(std::vector<std::string> _param) {
 // Add cop information
 std::string handler113(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() >= 5) {
 		std::stringstream playerName;
@@ -234,7 +232,7 @@ std::string handler113(std::vector<std::string> _param) {
 // Get vehicles
 std::string handler200(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 	if (_param.size() >= 4) {
 		return HiveLibrary->getVehicles(_atoi64(_param[1].c_str()), _param[2].c_str(), _param[3].c_str());
@@ -247,7 +245,7 @@ std::string handler200(std::vector<std::string> _param) {
 // Insert vehicle
 std::string handler201(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 
 	if (_param.size() == 7) {
@@ -265,12 +263,12 @@ std::string handler201(std::vector<std::string> _param) {
 // set vehicle active
 std::string handler202(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 
 	if (_param.size() == 4) {
 		try {
-			HiveLibrary->setVehicleActive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? true : false));
+			HiveLibrary->setVehicleActive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? false : true));
 		}
 		catch (...) {
 
@@ -283,12 +281,12 @@ std::string handler202(std::vector<std::string> _param) {
 // set vehicle alive
 std::string handler203(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 
 	if (_param.size() == 4) {
 		try {
-			HiveLibrary->setVehicleAlive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? true : false));
+			HiveLibrary->setVehicleAlive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? false : true));
 		}
 		catch (...) {
 
@@ -301,7 +299,7 @@ std::string handler203(std::vector<std::string> _param) {
 // set vehicle alive
 std::string handler299(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
-		HiveLibrary = new HiveLib();
+		exit(1);
 	}
 
 	if (_param.size() == 4) {

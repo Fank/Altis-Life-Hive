@@ -34,6 +34,7 @@ private:
 	bool debugLogQuery;
 	bool debugLogResult;
 	// Configfile
+	char *profilePath;
 	config4cpp::Configuration *configuration;
 	HiveLibDB dbConnection;
 	// Logging
@@ -45,6 +46,7 @@ private:
 
 public:
 	HiveLib();
+	HiveLib(char *ProfilePath);
 	~HiveLib();
 
 	// Get player
