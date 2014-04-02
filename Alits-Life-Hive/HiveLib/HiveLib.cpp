@@ -770,3 +770,24 @@ void HiveLib::setVehicleAlive(__int64 _steamId, int _id, bool _alive) {
 		*/
 	}
 }
+
+void HiveLib::resetVehicles() {
+	std::stringstream sqlQuery;
+	sqlQuery << "CALL resetLifeVehicles();";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
+	if (queryState == 0) {
+
+	}
+	else {
+		std::stringstream errorMsg;
+		errorMsg << "mysql_query() failed: " << mysql_error(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		this->log(errorMsg.str().c_str(), __FUNCTION__);
+	}
+}
