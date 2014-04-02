@@ -245,6 +245,23 @@ std::string handler202(std::vector<std::string> _param) {
 	return "";
 }
 
+// set vehicle alive
+std::string handler203(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+
+	if (_param.size() == 4) {
+		try {
+			HiveLibrary->setVehicleAlive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? true : false));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
 void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 	std::vector<std::string> rawCmd = split(std::string(function), ':');
 	std::string hiveOutput = "";
@@ -282,6 +299,9 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 		}
 		else if (rawCmd[0] == "202") {
 			hiveOutput = handler202(rawCmd);
+		}
+		else if (rawCmd[0] == "203") {
+			hiveOutput = handler203(rawCmd);
 		}
 	}
 

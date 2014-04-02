@@ -801,3 +801,39 @@ void HiveLib::setVehicleActive(__int64 _steamId, int _id, bool _active) {
 		*/
 	}
 }
+void HiveLib::setVehicleAlive(__int64 _steamId, int _id, bool _alive) {
+	std::stringstream sqlQuery;
+	sqlQuery << "UPDATE `vehicles` ";
+	sqlQuery << "SET `alive` = '" << (_alive ? 1 : 0) << "' ";
+	sqlQuery << "WHERE `pid` = '" << _steamId << "' ";
+	sqlQuery << "AND `id` = '" << _id << "' ";
+	sqlQuery << ";";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	int reconnectTry = 0;
+	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE])) {
+		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
+			exit(1);
+		}
+		else {
+			this->log("Error, attempting reconnection...", __FUNCTION__);
+			this->connectDB(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+			reconnectTry++;
+		}
+	}
+
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
+	if (queryState == 0) {
+
+	}
+	else {
+		// error
+		/*
+		printf(mysql_error(connection));
+		return 1;
+		*/
+	}
+}
