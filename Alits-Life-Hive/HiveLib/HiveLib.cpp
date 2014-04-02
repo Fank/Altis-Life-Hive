@@ -4,8 +4,8 @@
 
 HiveLib::HiveLib() {
 	// Disable debug
-	this->debugLogQuery = true;
-	this->debugLogResult = true;
+	this->debugLogQuery = false;
+	this->debugLogResult = false;
 
 	// Open configfile
 	this->configuration = config4cpp::Configuration::create();
@@ -51,7 +51,31 @@ HiveLib::~HiveLib() {
 	}
 }
 
-// Get Player
+void HiveLib::log(const char *_logMessage) {
+	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	struct std::tm *time = std::localtime(&currentTime);
+
+	std::ofstream logFile;
+	logFile.open("HiveLib.log", std::ios::out | std::ios::app);
+	logFile << "[" << std::put_time(time, "%Y-%m-%d %H:%M:%S") << "] " << _logMessage << std::endl;
+	logFile.close();
+}
+void HiveLib::log(const char *_logMessage, const char *_functionName) {
+	std::stringstream logMessage;
+	logMessage << _functionName << ": " << _logMessage;
+	this->log(logMessage.str().c_str());
+}
+
+bool HiveLib::connectDB(int _stackIndex) {
+	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname, this->dbConnection.Username, this->dbConnection.Password, this->dbConnection.Database, this->dbConnection.Port, NULL, 0)) {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+// Get player
 std::string HiveLib::getPlayer(__int64 _steamId) {
 	std::string playerString = "[]";
 	std::stringstream sqlQuery;
@@ -120,7 +144,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 
 	return playerString;
 }
-
+// Set player
 void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_gear, const char *_licenses, const char *_playerName) {
 	MYSQL_STMT *sqlStatement;
 	MYSQL_BIND sqlParam[5];
@@ -508,26 +532,138 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 	}
 }
 
-void HiveLib::log(const char *_logMessage) {
-	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-	struct std::tm *time = std::localtime(&currentTime);
+// Get vehicle
+std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char *_type) {
+	std::string vehicleString = "[]";
+	MYSQL_STMT *sqlStatement;
+	MYSQL_BIND sqlParam[2], sqlResult[8];
 
-	std::ofstream logFile;
-	logFile.open("HiveLib.log", std::ios::out | std::ios::app);
-	logFile << "[" << std::put_time(time, "%Y-%m-%d %H:%M:%S") << "] " << _logMessage << std::endl;
-	logFile.close();
-}
-void HiveLib::log(const char *_logMessage, const char *_functionName) {
-	std::stringstream logMessage;
-	logMessage << _functionName << ": " << _logMessage;
-	this->log(logMessage.str().c_str());
-}
+	std::stringstream sqlQuery;
+	sqlQuery << "SELECT ";
+	sqlQuery << "`id`, `classname`, `pid`, `alive`, `active`, `plate`, `color`, `inventory` ";
+	sqlQuery << "FROM `vehicles` ";
+	sqlQuery << "WHERE `pid` = '" << _steamId << "' ";
+	sqlQuery << "AND `side` = ? ";
+	sqlQuery << "AND `type` = ?";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
 
-bool HiveLib::connectDB(int _stackIndex) {
-	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname, this->dbConnection.Username, this->dbConnection.Password, this->dbConnection.Database, this->dbConnection.Port, NULL, 0)) {
-		return false;
+	// keep alive check
+	int reconnectTry = 0;
+	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE])) {
+		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
+			exit(1);
+		}
+		else {
+			this->log("Error, attempting reconnection...", __FUNCTION__);
+			this->connectDB(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+			reconnectTry++;
+		}
+	}
+
+	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+	if (sqlStatement != NULL) {
+		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
+			memset(sqlParam, 0, sizeof(sqlParam));
+
+			// Side
+			long unsigned int sideLength;
+			sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[0].buffer_length = 15;
+			sqlParam[0].buffer = (char *)_side;
+			sqlParam[0].is_null = 0;
+			sqlParam[0].length = &sideLength;
+
+			// Type
+			long unsigned int typeLength;
+			sqlParam[1].buffer_type = MYSQL_TYPE_STRING;
+			sqlParam[1].buffer_length = 15;
+			sqlParam[1].buffer = (char *)_type;
+			sqlParam[1].is_null = 0;
+			sqlParam[1].length = &typeLength;
+
+			// bind to statement
+			if (mysql_stmt_bind_param(sqlStatement, sqlParam)) {
+				std::stringstream errorMsg;
+				errorMsg << "mysql_stmt_bind_param() failed: " << mysql_stmt_error(sqlStatement);
+				this->log(errorMsg.str().c_str(), __FUNCTION__);
+			}
+			else {
+				sideLength = strlen(_side);
+				typeLength = strlen(_type);
+
+				if (mysql_stmt_execute(sqlStatement)) {
+					std::stringstream errorMsg;
+					errorMsg << "mysql_stmt_execute() failed: " << mysql_stmt_error(sqlStatement);
+					this->log(errorMsg.str().c_str(), __FUNCTION__);
+				}
+				else {
+					memset(sqlResult, 0, sizeof(sqlResult));
+
+					char *vehicleId = new char[12];
+					char *vehicleClassname = new char[32];
+					char *vehiclePid = new char[32];
+					char *vehicleAlive = new char[1];
+					char *vehicleActive = new char[1];
+					char *vehiclePlate = new char[20];
+					char *vehicleColor = new char[20];
+					char *vehicleInventory = new char[500];
+
+					sqlResult[0].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[0].buffer_length = sizeof(vehicleId);
+					sqlResult[0].buffer = &vehicleId;
+
+					sqlResult[1].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[1].buffer_length = sizeof(vehicleClassname);
+					sqlResult[1].buffer = &vehicleClassname;
+
+					sqlResult[2].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[2].buffer_length = sizeof(vehiclePid);
+					sqlResult[2].buffer = &vehiclePid;
+
+					sqlResult[3].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[3].buffer_length = sizeof(vehicleAlive);
+					sqlResult[3].buffer = &vehicleAlive;
+
+					sqlResult[4].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[4].buffer_length = sizeof(vehicleActive);
+					sqlResult[4].buffer = &vehicleActive;
+
+					sqlResult[5].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[5].buffer_length = sizeof(vehiclePlate);
+					sqlResult[5].buffer = &vehiclePlate;
+
+					sqlResult[6].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[6].buffer_length = sizeof(vehicleColor);
+					sqlResult[6].buffer = &vehicleColor;
+
+					sqlResult[7].buffer_type = MYSQL_TYPE_VARCHAR;
+					sqlResult[7].buffer_length = sizeof(vehicleInventory);
+					sqlResult[7].buffer = &vehicleInventory;
+
+					if (mysql_stmt_bind_result(sqlStatement, sqlResult)) {
+						std::stringstream errorMsg;
+						errorMsg << "mysql_stmt_bind_result() failed: " << mysql_stmt_error(sqlStatement);
+						this->log(errorMsg.str().c_str(), __FUNCTION__);
+					}
+					else {
+						while (!mysql_stmt_fetch(sqlStatement)) {
+
+						}
+					}
+
+					mysql_stmt_free_result(sqlStatement);
+				}
+			}
+		}
+		else {
+			this->log("Could not prepare statement", __FUNCTION__);
+		}
 	}
 	else {
-		return true;
+		this->log("Could not initialize statement handler", __FUNCTION__);
 	}
+
+	return vehicleString;
 }

@@ -16,7 +16,8 @@
 #define HIVELIB_MYSQL_CONNECTION_TRY 3
 enum {
 	HIVELIB_MYSQL_CONNECTION_PLAYER = 0,
-	HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE
+	HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE,
+	HIVELIB_MYSQL_CONNECTION_VEHICLE
 };
 
 struct HiveLibDB {
@@ -44,12 +45,17 @@ private:
 public:
 	HiveLib();
 	~HiveLib();
+
 	// Get player
 	std::string getPlayer(__int64 SteamId);
 	// set player
 	void setPlayerCop(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, const char *PlayerName);
 	void setPlayerCiv(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
 	void setPlayerReb(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
+
+	// Get vehicle
+	//std::string getVehicle();
+	std::string getVehicles(__int64 SteamId, const char *Side, const char *Type);
 };
 
 #endif
