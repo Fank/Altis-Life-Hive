@@ -25,129 +25,263 @@ std::vector<std::string> split(const std::string &s, char delim) {
 	return elems;
 }
 
+// Init HiveLib
+std::string handler0(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	return "";
+}
+
+// Get player information
+std::string handler100(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() == 2) {
+		return HiveLibrary->getPlayer(_atoi64(_param[1].c_str()));
+	}
+	else {
+		return "";
+	}
+}
+
+// Update civilian information
+std::string handler101(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() >= 7) {
+		std::stringstream playerName;
+		for (std::vector<std::string>::iterator
+			it = _param.begin() + 7;
+			it != _param.end();
+		) {
+			playerName << ((_param.begin() + 7) != it ? ":" : "") << *it;
+			it++;
+		}
+
+		try {
+			HiveLibrary->setPlayerCiv(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), (_param[6].compare("0") ? true : false), playerName.str().c_str());
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
+// Update resistance information
+std::string handler102(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() >= 7) {
+		std::stringstream playerName;
+		for (std::vector<std::string>::iterator
+			it = _param.begin() + 7;
+			it != _param.end();
+		) {
+			playerName << ((_param.begin() + 7) != it ? ":" : "") << *it;
+			it++;
+		}
+
+		try {
+			HiveLibrary->setPlayerReb(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), (_param[6].compare("0") ? true : false), playerName.str().c_str());
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
+// Update cop information
+std::string handler103(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() >= 6) {
+		std::stringstream playerName;
+		for (std::vector<std::string>::iterator
+			it = _param.begin() + 6;
+			it != _param.end();
+		) {
+			playerName << ((_param.begin() + 6) != it ? ":" : "") << *it;
+			it++;
+		}
+
+		try {
+			HiveLibrary->setPlayerCop(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), playerName.str().c_str());
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
+// Add civilian information
+std::string handler111(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() >= 5) {
+		std::stringstream playerName;
+		for (std::vector<std::string>::iterator
+			it = _param.begin() + 5;
+			it != _param.end();
+		) {
+			playerName << ((_param.begin() + 5) != it ? ":" : "") << *it;
+			it++;
+		}
+
+		try {
+			HiveLibrary->setPlayerCiv(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), "[]", "[]", (_param[4].compare("0") ? true : false), playerName.str().c_str());
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
+// Add resistance information
+std::string handler112(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() >= 5) {
+		std::stringstream playerName;
+		for (std::vector<std::string>::iterator
+			it = _param.begin() + 5;
+			it != _param.end();
+		) {
+			playerName << ((_param.begin() + 5) != it ? ":" : "") << *it;
+			it++;
+		}
+
+		try {
+			HiveLibrary->setPlayerReb(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), "[]", "[]", (_param[4].compare("0") ? true : false), playerName.str().c_str());
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
+// Add cop information
+std::string handler113(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() >= 5) {
+		std::stringstream playerName;
+		for (std::vector<std::string>::iterator
+			it = _param.begin() + 5;
+			it != _param.end();
+		) {
+			playerName << ((_param.begin() + 5) != it ? ":" : "") << *it;
+			it++;
+		}
+
+		try {
+			HiveLibrary->setPlayerCop(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), "[]", playerName.str().c_str());
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
+// Get vehicles
+std::string handler200(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+	if (_param.size() >= 4) {
+		return HiveLibrary->getVehicles(_atoi64(_param[1].c_str()), _param[2].c_str(), _param[3].c_str());
+	}
+	else {
+		return "";
+	}
+}
+
+// Insert vehicle
+std::string handler201(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+
+	if (_param.size() == 7) {
+		try {
+			HiveLibrary->insertVehicle(_atoi64(_param[1].c_str()), (char *)_param[2].c_str(), (char *)_param[3].c_str(), (char *)_param[4].c_str(), atoi(_param[5].c_str()), atoi(_param[6].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+// set vehicle active
+std::string handler202(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		HiveLibrary = new HiveLib();
+	}
+
+	if (_param.size() == 4) {
+		try {
+			HiveLibrary->setVehicleActive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? true : false));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
 void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 	std::vector<std::string> rawCmd = split(std::string(function), ':');
 	std::string hiveOutput = "";
 
 	if (rawCmd.size() > 0) {
-		// Init HiveLib
 		if (rawCmd[0] == "0") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
+			hiveOutput = handler0(rawCmd);
 		}
-		// Get player information
 		else if (rawCmd[0] == "100") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
-			if (rawCmd.size() == 2) {
-				hiveOutput = HiveLibrary->getPlayer(_atoi64(rawCmd[1].c_str()));
-			}
+			hiveOutput = handler100(rawCmd);
 		}
-
-		// Update civilian information
 		else if (rawCmd[0] == "101") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
-			if (rawCmd.size() >= 7) {
-				std::stringstream playerName;
-				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 7;
-					it != rawCmd.end();
-				) {
-					playerName << ((rawCmd.begin() + 7) != it ? ":" : "") << *it;
-					it++;
-				}
-				HiveLibrary->setPlayerCiv(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), (rawCmd[6].compare("0") ? true : false), playerName.str().c_str());
-			}
+			hiveOutput = handler101(rawCmd);
 		}
-		// Update resistance information
 		else if (rawCmd[0] == "102") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
-			if (rawCmd.size() >= 7) {
-				std::stringstream playerName;
-				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 7;
-					it != rawCmd.end();
-				) {
-					playerName << ((rawCmd.begin() + 7) != it ? ":" : "") << *it;
-					it++;
-				}
-				HiveLibrary->setPlayerReb(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), (rawCmd[6].compare("0") ? true : false), playerName.str().c_str());
-			}
+			hiveOutput = handler102(rawCmd);
 		}
-		// Update cop information
 		else if (rawCmd[0] == "103") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
-			if (rawCmd.size() >= 6) {
-				std::stringstream playerName;
-				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 6;
-					it != rawCmd.end();
-				) {
-					playerName << ((rawCmd.begin() + 6) != it ? ":" : "") << *it;
-					it++;
-				}
-				HiveLibrary->setPlayerCop(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), rawCmd[5].c_str(), playerName.str().c_str());
-			}
+			hiveOutput = handler103(rawCmd);
 		}
-
-		// Add civilian information
 		else if (rawCmd[0] == "111") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
-			if (rawCmd.size() >= 5) {
-				std::stringstream playerName;
-				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 5;
-					it != rawCmd.end();
-				) {
-					playerName << ((rawCmd.begin() + 5) != it ? ":" : "") << *it;
-					it++;
-				}
-				HiveLibrary->setPlayerCiv(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), "[]", "[]", (rawCmd[4].compare("0") ? true : false), playerName.str().c_str());
-			}
+			hiveOutput = handler111(rawCmd);
 		}
-		// Add resistance information
 		else if (rawCmd[0] == "112") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
-			if (rawCmd.size() >= 5) {
-				std::stringstream playerName;
-				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 5;
-					it != rawCmd.end();
-				) {
-					playerName << ((rawCmd.begin() + 5) != it ? ":" : "") << *it;
-					it++;
-				}
-				HiveLibrary->setPlayerReb(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), "[]", "[]", (rawCmd[4].compare("0") ? true : false), playerName.str().c_str());
-			}
+			hiveOutput = handler112(rawCmd);
 		}
-		// Add cop information
 		else if (rawCmd[0] == "113") {
-			if (HiveLibrary == NULL) {
-				HiveLibrary = new HiveLib();
-			}
-			if (rawCmd.size() >= 5) {
-				std::stringstream playerName;
-				for (std::vector<std::string>::iterator
-					it = rawCmd.begin() + 5;
-					it != rawCmd.end();
-				) {
-					playerName << ((rawCmd.begin() + 5) != it ? ":" : "") << *it;
-					it++;
-				}
-				HiveLibrary->setPlayerCop(_atoi64(rawCmd[1].c_str()), atoi(rawCmd[2].c_str()), atoi(rawCmd[3].c_str()), rawCmd[4].c_str(), "[]", playerName.str().c_str());
-			}
+			hiveOutput = handler113(rawCmd);
+		}
+		else if (rawCmd[0] == "200") {
+			hiveOutput = handler200(rawCmd);
+		}
+		else if (rawCmd[0] == "201") {
+			hiveOutput = handler201(rawCmd);
+		}
+		else if (rawCmd[0] == "202") {
+			hiveOutput = handler202(rawCmd);
 		}
 	}
 
