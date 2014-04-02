@@ -112,6 +112,11 @@ void HiveLib::log(const char *_logMessage, const char *_functionName) {
 	logMessage << _functionName << ": " << _logMessage;
 	this->log(logMessage.str().c_str());
 }
+void HiveLib::log(const char *_logMessage, const char *_functionName, MYSQL_STMT *_sqlStatement) {
+	std::stringstream logMessage;
+	logMessage << _logMessage << " (" <<  mysql_stmt_errno(_sqlStatement) << ") " << mysql_stmt_error(_sqlStatement);
+	this->log(logMessage.str().c_str(), _functionName);
+}
 
 bool HiveLib::dbConnect(int _stackIndex) {
 	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname, this->dbConnection.Username, this->dbConnection.Password, this->dbConnection.Database, this->dbConnection.Port, NULL, 0)) {
@@ -557,10 +562,12 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 	std::string vehicleString = "[]";
 	MYSQL_STMT *sqlStatement;
 	MYSQL_BIND sqlParam[2], sqlResult[8];
+	unsigned long sqlResultLength[8];
+	my_bool sqlResultIsNull[8];
 
 	std::stringstream sqlQuery;
 	sqlQuery << "SELECT ";
-	sqlQuery << "`id`, `classname`, `pid`, `alive`, `active`, `plate`, `color`, `inventory` ";
+	sqlQuery << "`id`, `classname`, `pid`, `alive`, `active`, `plate`, `color`, REPLACE(`inventory`, '\"', '') ";
 	sqlQuery << "FROM `vehicles` ";
 	sqlQuery << "WHERE `pid` = '" << _steamId << "' ";
 	sqlQuery << "AND `side` = ? ";
@@ -593,8 +600,10 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 	char vehicleId[12];
 	char vehicleClassname[32];
 	char vehiclePid[32];
-	char vehicleAlive[1];
-	char vehicleActive[1];
+	short int vehicleAlive;
+	short int vehicleActive;
+	//char vehicleAlive[1];
+	//char vehicleActive[1];
 	char vehiclePlate[20];
 	char vehicleColor[20];
 	char vehicleInventory[500];
@@ -615,68 +624,95 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 	sqlParam[1].length = &typeLength;
 
 	// SQL result
-	sqlResult[0].buffer_type = MYSQL_TYPE_VARCHAR;
+	sqlResult[0].buffer_type = MYSQL_TYPE_STRING;
 	sqlResult[0].buffer_length = sizeof(vehicleId);
 	sqlResult[0].buffer = (void *)&vehicleId;
+	sqlResult[0].is_null = &sqlResultIsNull[0];
+	sqlResult[0].length = &sqlResultLength[0];
 
-	sqlResult[1].buffer_type = MYSQL_TYPE_VARCHAR;
+	sqlResult[1].buffer_type = MYSQL_TYPE_STRING;
 	sqlResult[1].buffer_length = sizeof(vehicleClassname);
 	sqlResult[1].buffer = (void *)&vehicleClassname;
+	sqlResult[1].is_null = &sqlResultIsNull[1];
+	sqlResult[1].length = &sqlResultLength[1];
 
-	sqlResult[2].buffer_type = MYSQL_TYPE_VARCHAR;
+	sqlResult[2].buffer_type = MYSQL_TYPE_STRING;
 	sqlResult[2].buffer_length = sizeof(vehiclePid);
 	sqlResult[2].buffer = (void *)&vehiclePid;
+	sqlResult[2].is_null = &sqlResultIsNull[2];
+	sqlResult[2].length = &sqlResultLength[2];
 
-	sqlResult[3].buffer_type = MYSQL_TYPE_VARCHAR;
-	sqlResult[3].buffer_length = sizeof(vehicleAlive);
+	sqlResult[3].buffer_type = MYSQL_TYPE_TINY;
+	//sqlResult[3].buffer_length = sizeof(vehicleAlive);
 	sqlResult[3].buffer = (void *)&vehicleAlive;
+	sqlResult[3].is_null = &sqlResultIsNull[3];
+	sqlResult[3].length = &sqlResultLength[3];
 
-	sqlResult[4].buffer_type = MYSQL_TYPE_VARCHAR;
-	sqlResult[4].buffer_length = sizeof(vehicleActive);
+	sqlResult[4].buffer_type = MYSQL_TYPE_TINY;
+	//sqlResult[4].buffer_length = sizeof(vehicleActive);
 	sqlResult[4].buffer = (void *)&vehicleActive;
+	sqlResult[4].is_null = &sqlResultIsNull[4];
+	sqlResult[4].length = &sqlResultLength[4];
 
-	sqlResult[5].buffer_type = MYSQL_TYPE_VARCHAR;
+	sqlResult[5].buffer_type = MYSQL_TYPE_STRING;
 	sqlResult[5].buffer_length = sizeof(vehiclePlate);
 	sqlResult[5].buffer = (void *)&vehiclePlate;
+	sqlResult[5].is_null = &sqlResultIsNull[5];
+	sqlResult[5].length = &sqlResultLength[5];
 
-	sqlResult[6].buffer_type = MYSQL_TYPE_VARCHAR;
+	sqlResult[6].buffer_type = MYSQL_TYPE_STRING;
 	sqlResult[6].buffer_length = sizeof(vehicleColor);
 	sqlResult[6].buffer = (void *)&vehicleColor;
+	sqlResult[6].is_null = &sqlResultIsNull[6];
+	sqlResult[6].length = &sqlResultLength[6];
 
-	sqlResult[7].buffer_type = MYSQL_TYPE_VARCHAR;
+	sqlResult[7].buffer_type = MYSQL_TYPE_STRING;
 	sqlResult[7].buffer_length = sizeof(vehicleInventory);
 	sqlResult[7].buffer = (void *)&vehicleInventory;
+	sqlResult[7].is_null = &sqlResultIsNull[7];
+	sqlResult[7].length = &sqlResultLength[7];
 
 	// Bind buffer to statement
 	if (mysql_stmt_bind_param(sqlStatement, sqlParam) != 0) {
-		std::stringstream errorMsg;
-		errorMsg << "mysql_stmt_bind_param() failed: " << mysql_stmt_error(sqlStatement);
-		this->log(errorMsg.str().c_str(), __FUNCTION__);
-		return vehicleString;
-	}
-
-	// Bind result to statement
-	if (mysql_stmt_bind_result(sqlStatement, sqlResult) != 0) {
-		std::stringstream errorMsg;
-		errorMsg << "mysql_stmt_bind_result() failed: " << mysql_stmt_error(sqlStatement);
-		this->log(errorMsg.str().c_str(), __FUNCTION__);
+		this->log("mysql_stmt_bind_param() failed", __FUNCTION__, sqlStatement);
 		return vehicleString;
 	}
 
 	sideLength = strlen(_side);
 	typeLength = strlen(_type);
 
-
+	// Execute statement
 	if (mysql_stmt_execute(sqlStatement) != 0) {
-		std::stringstream errorMsg;
-		errorMsg << "mysql_stmt_execute() failed: " << mysql_stmt_error(sqlStatement);
-		this->log(errorMsg.str().c_str(), __FUNCTION__);
+		this->log("mysql_stmt_execute() failed", __FUNCTION__, sqlStatement);
 		return vehicleString;
 	}
 
-	while (!mysql_stmt_fetch(sqlStatement)) {
-		this->log(vehicleId);
+	// Bind result to statement
+	if (mysql_stmt_bind_result(sqlStatement, sqlResult) != 0) {
+		this->log("mysql_stmt_bind_result() failed", __FUNCTION__, sqlStatement);
+		return vehicleString;
 	}
+
+	if (mysql_stmt_store_result(sqlStatement) != 0) {
+		this->log("mysql_stmt_store_result() failed", __FUNCTION__, sqlStatement);
+		return vehicleString;
+	}
+
+	SQF sqfVehicles;
+	while (!mysql_stmt_fetch(sqlStatement)) {
+		SQF sqfVehicle;
+		sqfVehicle.push_str(vehicleId);
+		sqfVehicle.push_str(vehicleClassname);
+		sqfVehicle.push_str(vehiclePid);
+		sqfVehicle.push_str(vehicleAlive > 0 ? "1" : "0");
+		sqfVehicle.push_str(vehicleActive > 0 ? "1" : "0");
+		sqfVehicle.push_str(vehiclePlate);
+		sqfVehicle.push_str(vehicleColor);
+		sqfVehicle.push_str(vehicleInventory);
+
+		sqfVehicles.push_array((char *)sqfVehicle.toArray().c_str());
+	}
+	vehicleString = sqfVehicles.toArray();
 
 	mysql_stmt_free_result(sqlStatement);
 	mysql_stmt_close(sqlStatement);
