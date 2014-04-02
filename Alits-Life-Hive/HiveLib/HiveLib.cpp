@@ -571,7 +571,9 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 	sqlQuery << "FROM `vehicles` ";
 	sqlQuery << "WHERE `pid` = '" << _steamId << "' ";
 	sqlQuery << "AND `side` = ? ";
-	sqlQuery << "AND `type` = ?";
+	sqlQuery << "AND `type` = ? ";
+	sqlQuery << "AND `alive` = '1' ";
+	sqlQuery << "AND `active` = '0' ";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
