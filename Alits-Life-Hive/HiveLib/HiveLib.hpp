@@ -7,6 +7,7 @@
 #include <ctime>
 #include <iomanip>
 #include <chrono>
+#include <config4cpp\Configuration.h>
 
 #ifndef HIVELIB_H
 #define HIVELIB_H
@@ -18,11 +19,22 @@ enum {
 	HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE
 };
 
+struct HiveLibDB {
+	char *Hostname;
+	char *Username;
+	char *Password;
+	char *Database;
+	unsigned short Port;
+};
+
 class HiveLib {
 private:
 	std::vector<MYSQL*> MySQLStack;
 	bool debugLogQuery;
 	bool debugLogResult;
+	// Configfile
+	config4cpp::Configuration *configuration;
+	HiveLibDB dbConnection;
 	// Logging
 	void log(const char *LogMessage);
 	void log(const char *LogMessage, const char *FunctionName);

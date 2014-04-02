@@ -7,6 +7,22 @@ HiveLib::HiveLib() {
 	this->debugLogQuery = true;
 	this->debugLogResult = true;
 
+	// Open configfile
+	this->configuration = config4cpp::Configuration::create();
+	try {
+		this->configuration->parse("AltisLifeHive.cfg");
+		this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname");
+		this->dbConnection.Username = (char *)this->configuration->lookupString("", "Username");
+		this->dbConnection.Password = (char *)this->configuration->lookupString("", "Password");
+		this->dbConnection.Database = (char *)this->configuration->lookupString("", "Database");
+		this->dbConnection.Port = this->configuration->lookupInt("", "Port");
+	}
+	catch (const config4cpp::ConfigurationException & ex) {
+		this->log(ex.c_str(), __FUNCTION__);
+		this->configuration->destroy();
+		exit(1);
+	}
+
 	// Init MySQL connections
 	for (int i = 0; i < HIVELIB_MYSQL_CONNECTION_COUNT; i++) {
 		MYSQL *con = mysql_init(NULL);
@@ -25,6 +41,8 @@ HiveLib::HiveLib() {
 		}
 
 	}
+
+	this->configuration->destroy();
 }
 HiveLib::~HiveLib() {
 	// Close all MySQL connections
@@ -506,7 +524,7 @@ void HiveLib::log(const char *_logMessage, const char *_functionName) {
 }
 
 bool HiveLib::connectDB(int _stackIndex) {
-	if (!mysql_real_connect(this->MySQLStack[_stackIndex], "10.11.201.12", "root", "root", "arma3life", 3306, NULL, 0)) {
+	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname, this->dbConnection.Username, this->dbConnection.Password, this->dbConnection.Database, this->dbConnection.Port, NULL, 0)) {
 		return false;
 	}
 	else {
