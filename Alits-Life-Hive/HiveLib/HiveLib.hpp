@@ -40,7 +40,8 @@ private:
 	void log(const char *LogMessage);
 	void log(const char *LogMessage, const char *FunctionName);
 	// Database connection
-	bool connectDB(int StackIndex);
+	bool dbConnect(int StackIndex);
+	void dbCheck(int StackIndex);
 
 public:
 	HiveLib();

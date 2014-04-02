@@ -33,7 +33,7 @@ HiveLib::HiveLib() {
 
 		this->MySQLStack.push_back(con);
 
-		if (!this->connectDB(i)) {
+		if (!this->dbConnect(i)) {
 			std::stringstream errorMsg;
 			errorMsg << "Failed to connect to database: " << mysql_error(this->MySQLStack[i]);
 			this->log(errorMsg.str().c_str(), __FUNCTION__);
@@ -66,12 +66,25 @@ void HiveLib::log(const char *_logMessage, const char *_functionName) {
 	this->log(logMessage.str().c_str());
 }
 
-bool HiveLib::connectDB(int _stackIndex) {
+bool HiveLib::dbConnect(int _stackIndex) {
 	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname, this->dbConnection.Username, this->dbConnection.Password, this->dbConnection.Database, this->dbConnection.Port, NULL, 0)) {
 		return false;
 	}
 	else {
 		return true;
+	}
+}
+void HiveLib::dbCheck(int _stackIndex) {
+	int reconnectTry = 0;
+	while (mysql_ping(this->MySQLStack[_stackIndex])) {
+		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
+			exit(1);
+		}
+		else {
+			this->log("Error, attempting reconnection...", __FUNCTION__);
+			this->dbConnect(_stackIndex);
+			reconnectTry++;
+		}
 	}
 }
 
@@ -92,17 +105,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYER])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYER);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_PLAYER);
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYER], sqlQuery.str().c_str());
 	if (queryState == 0) {
@@ -169,17 +172,7 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
 
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
 	if (sqlStatement != NULL) {
@@ -298,17 +291,7 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
 
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
 	if (sqlStatement != NULL) {
@@ -427,17 +410,7 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
 
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
 	if (sqlStatement != NULL) {
@@ -550,17 +523,7 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_VEHICLE);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
 	if (sqlStatement != NULL) {
@@ -688,17 +651,7 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_VEHICLE);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
 	if (sqlStatement != NULL) {
@@ -777,17 +730,7 @@ void HiveLib::setVehicleActive(__int64 _steamId, int _id, bool _active) {
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_VEHICLE);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
 	if (queryState == 0) {
@@ -813,17 +756,7 @@ void HiveLib::setVehicleAlive(__int64 _steamId, int _id, bool _alive) {
 	}
 
 	// keep alive check
-	int reconnectTry = 0;
-	while (mysql_ping(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE])) {
-		if (reconnectTry == HIVELIB_MYSQL_CONNECTION_TRY) {
-			exit(1);
-		}
-		else {
-			this->log("Error, attempting reconnection...", __FUNCTION__);
-			this->connectDB(HIVELIB_MYSQL_CONNECTION_VEHICLE);
-			reconnectTry++;
-		}
-	}
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
 	if (queryState == 0) {
