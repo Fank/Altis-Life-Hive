@@ -58,16 +58,26 @@ HiveLib::HiveLib(char *_profilePath) {
 	configFilePath << this->profilePath << "/" << "AltisLifeHive.cfg";
 	try {
 		this->configuration->parse(configFilePath.str().c_str());
-		this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname");
-		this->dbConnection.Username = (char *)this->configuration->lookupString("", "Username");
-		this->dbConnection.Password = (char *)this->configuration->lookupString("", "Password");
+		this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname", "localhost");
+		this->dbConnection.Username = (char *)this->configuration->lookupString("", "Username", "root");
+		this->dbConnection.Password = (char *)this->configuration->lookupString("", "Password", "");
 		this->dbConnection.Database = (char *)this->configuration->lookupString("", "Database");
 		this->dbConnection.Port = this->configuration->lookupInt("", "Port");
 	}
 	catch (const config4cpp::ConfigurationException & ex) {
-		this->log(ex.c_str(), __FUNCTION__);
-		this->configuration->destroy();
-		exit(1);
+		try {
+			this->configuration->parse("AltisLifeHive.cfg");
+			this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname", "localhost");
+			this->dbConnection.Username = (char *)this->configuration->lookupString("", "Username", "root");
+			this->dbConnection.Password = (char *)this->configuration->lookupString("", "Password", "");
+			this->dbConnection.Database = (char *)this->configuration->lookupString("", "Database");
+			this->dbConnection.Port = this->configuration->lookupInt("", "Port");
+		}
+		catch (const config4cpp::ConfigurationException & ex) {
+			this->log(ex.c_str(), __FUNCTION__);
+			this->configuration->destroy();
+			exit(1);
+		}
 	}
 
 	// Init MySQL connections
