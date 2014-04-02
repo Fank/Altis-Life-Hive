@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "HiveLib\HiveLib.hpp"
+#include <shellapi.h>
 
 HiveLib *HiveLibrary;
 
@@ -25,8 +26,42 @@ std::vector<std::string> split(const std::string &s, char delim) {
 	return elems;
 }
 
+std::string getProfileFolder() {
+	std::string profileFolder = "";
+	LPTSTR cmdLine = GetCommandLine();
+	int numCmdLineArgs = 0;
+	LPTSTR *cmdLineArgs = CommandLineToArgvW(cmdLine, &numCmdLineArgs);
+
+	std::vector<std::string> commandLine;
+	commandLine.reserve(numCmdLineArgs);
+
+	for (int i = 0; i < numCmdLineArgs; i++) {
+		std::wstring args(cmdLineArgs[i]);
+		std::string utf8(args.begin(), args.end());
+		commandLine.push_back(utf8);
+	}
+
+	for (std::vector<std::string>::iterator it = commandLine.begin(); it != commandLine.end();) {
+		std::string starter = "-profiles=";
+		if (it->length() < starter.length()) {
+			continue;
+		}
+
+		std::string compareMe = it->substr(0, starter.length());
+		if (compareMe.compare(starter) != 0) {
+			continue;
+		}
+
+		profileFolder = it->substr(compareMe.length());
+	}
+
+	return profileFolder;
+}
+
 // Init HiveLib
 std::string handler0(std::vector<std::string> _param) {
+	std::string profileFolder = getProfileFolder();
+
 	if (HiveLibrary == NULL) {
 		HiveLibrary = new HiveLib();
 	}
