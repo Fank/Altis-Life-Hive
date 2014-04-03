@@ -41,6 +41,7 @@ private:
 	// Logging
 	void log(const char *LogMessage);
 	void log(const char *LogMessage, const char *FunctionName);
+	void log(const char *LogMessage, const char *FunctionName, MYSQL *SQLConnection);
 	void log(const char *LogMessage, const char *FunctionName, MYSQL_STMT *SQLStatement);
 	// Database connection
 	bool dbConnect(int StackIndex);

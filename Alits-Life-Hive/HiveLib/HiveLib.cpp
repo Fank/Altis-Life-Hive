@@ -122,6 +122,11 @@ void HiveLib::log(const char *_logMessage, const char *_functionName) {
 	logMessage << _functionName << ": " << _logMessage;
 	this->log(logMessage.str().c_str());
 }
+void HiveLib::log(const char *_logMessage, const char *_functionName, MYSQL *_sqlConnection) {
+	std::stringstream logMessage;
+	logMessage << _logMessage << " (" << mysql_errno(_sqlConnection) << ") " << mysql_error(_sqlConnection);
+	this->log(logMessage.str().c_str(), _functionName);
+}
 void HiveLib::log(const char *_logMessage, const char *_functionName, MYSQL_STMT *_sqlStatement) {
 	std::stringstream logMessage;
 	logMessage << _logMessage << " (" <<  mysql_stmt_errno(_sqlStatement) << ") " << mysql_stmt_error(_sqlStatement);
@@ -130,6 +135,7 @@ void HiveLib::log(const char *_logMessage, const char *_functionName, MYSQL_STMT
 
 bool HiveLib::dbConnect(int _stackIndex) {
 	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname, this->dbConnection.Username, this->dbConnection.Password, this->dbConnection.Database, this->dbConnection.Port, NULL, 0)) {
+		this->log("Failed to connect to database: ", __FUNCTION__, this->MySQLStack[_stackIndex]);
 		return false;
 	}
 	else {
@@ -143,11 +149,11 @@ void HiveLib::dbCheck(int _stackIndex) {
 			exit(1);
 		}
 		else {
+			if (reconnectTry > 0) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			}
 			this->log("Error, attempting reconnection...", __FUNCTION__);
 			this->dbConnect(_stackIndex);
-			if (reconnectTry > 0) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			}
 			reconnectTry++;
 		}
 	}
