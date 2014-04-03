@@ -145,6 +145,9 @@ void HiveLib::dbCheck(int _stackIndex) {
 		else {
 			this->log("Error, attempting reconnection...", __FUNCTION__);
 			this->dbConnect(_stackIndex);
+			if (reconnectTry > 0) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(250));
+			}
 			reconnectTry++;
 		}
 	}

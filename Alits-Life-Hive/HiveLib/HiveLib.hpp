@@ -6,6 +6,7 @@
 #include <errmsg.h>
 #include <ctime>
 #include <iomanip>
+#include <thread>
 #include <chrono>
 #include <config4cpp\Configuration.h>
 
