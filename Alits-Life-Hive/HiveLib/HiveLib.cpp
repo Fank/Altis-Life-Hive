@@ -64,7 +64,7 @@ HiveLib::HiveLib(char *_profilePath) {
 		this->dbConnection.Database = (char *)this->configuration->lookupString("", "Database");
 		this->dbConnection.Port = this->configuration->lookupInt("", "Port");
 	}
-	catch (const config4cpp::ConfigurationException & ex) {
+	catch (...) {
 		try {
 			this->configuration->parse("AltisLifeHive.cfg");
 			this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname", "localhost");
@@ -146,7 +146,7 @@ void HiveLib::dbCheck(int _stackIndex) {
 			this->log("Error, attempting reconnection...", __FUNCTION__);
 			this->dbConnect(_stackIndex);
 			if (reconnectTry > 0) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(250));
+				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 			}
 			reconnectTry++;
 		}
