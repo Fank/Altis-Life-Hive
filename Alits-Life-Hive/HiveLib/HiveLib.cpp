@@ -3,46 +3,7 @@
 #include "SQF.hpp"
 
 HiveLib::HiveLib() {
-	// Disable debug
-	this->debugLogQuery = false;
-	this->debugLogResult = false;
-
-	// Open configfile
-	this->configuration = config4cpp::Configuration::create();
-	try {
-		this->configuration->parse("AltisLifeHive.cfg");
-		this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname");
-		this->dbConnection.Username = (char *)this->configuration->lookupString("", "Username");
-		this->dbConnection.Password = (char *)this->configuration->lookupString("", "Password");
-		this->dbConnection.Database = (char *)this->configuration->lookupString("", "Database");
-		this->dbConnection.Port = this->configuration->lookupInt("", "Port");
-	}
-	catch (const config4cpp::ConfigurationException & ex) {
-		this->log(ex.c_str(), __FUNCTION__);
-		this->configuration->destroy();
-		exit(1);
-	}
-
-	// Init MySQL connections
-	for (int i = 0; i < HIVELIB_MYSQL_CONNECTION_COUNT; i++) {
-		MYSQL *con = mysql_init(NULL);
-
-		if (con == NULL) {
-			exit(1);
-		}
-
-		this->MySQLStack.push_back(con);
-
-		if (!this->dbConnect(i)) {
-			std::stringstream errorMsg;
-			errorMsg << "Failed to connect to database: " << mysql_error(this->MySQLStack[i]);
-			this->log(errorMsg.str().c_str(), __FUNCTION__);
-			exit(1);
-		}
-
-	}
-
-	this->configuration->destroy();
+	exit(1);
 }
 HiveLib::HiveLib(char *_profilePath) {
 	// Disable debug
@@ -58,19 +19,19 @@ HiveLib::HiveLib(char *_profilePath) {
 	configFilePath << this->profilePath << "/" << "AltisLifeHive.cfg";
 	try {
 		this->configuration->parse(configFilePath.str().c_str());
-		this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname", "localhost");
-		this->dbConnection.Username = (char *)this->configuration->lookupString("", "Username", "root");
-		this->dbConnection.Password = (char *)this->configuration->lookupString("", "Password", "");
-		this->dbConnection.Database = (char *)this->configuration->lookupString("", "Database");
+		strcpy(this->dbConnection.Hostname, this->configuration->lookupString("", "Hostname"));
+		strcpy(this->dbConnection.Username, this->configuration->lookupString("", "Username"));
+		strcpy(this->dbConnection.Password, this->configuration->lookupString("", "Password", ""));
+		strcpy(this->dbConnection.Database, this->configuration->lookupString("", "Database"));
 		this->dbConnection.Port = this->configuration->lookupInt("", "Port");
 	}
 	catch (...) {
 		try {
 			this->configuration->parse("AltisLifeHive.cfg");
-			this->dbConnection.Hostname = (char *)this->configuration->lookupString("", "Hostname", "localhost");
-			this->dbConnection.Username = (char *)this->configuration->lookupString("", "Username", "root");
-			this->dbConnection.Password = (char *)this->configuration->lookupString("", "Password", "");
-			this->dbConnection.Database = (char *)this->configuration->lookupString("", "Database");
+			strcpy(this->dbConnection.Hostname, this->configuration->lookupString("", "Hostname"));
+			strcpy(this->dbConnection.Username, this->configuration->lookupString("", "Username"));
+			strcpy(this->dbConnection.Password, this->configuration->lookupString("", "Password", ""));
+			strcpy(this->dbConnection.Database, this->configuration->lookupString("", "Database"));
 			this->dbConnection.Port = this->configuration->lookupInt("", "Port");
 		}
 		catch (const config4cpp::ConfigurationException & ex) {
@@ -150,7 +111,7 @@ void HiveLib::dbCheck(int _stackIndex) {
 		}
 		else {
 			if (reconnectTry > 0) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+				std::this_thread::sleep_for(std::chrono::milliseconds(250));
 			}
 			this->log("Error, attempting reconnection...", __FUNCTION__);
 			this->dbConnect(_stackIndex);
@@ -763,73 +724,70 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 	// keep alive check
 	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
+	// Init statement
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
-	if (sqlStatement != NULL) {
-		if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) == 0) {
-			memset(sqlParam, 0, sizeof(sqlParam));
-
-			// insert side
-			long unsigned int insertSideLength;
-			sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[0].buffer_length = 32;
-			sqlParam[0].buffer = _side;
-			sqlParam[0].is_null = 0;
-			sqlParam[0].length = &insertSideLength;
-
-			// insert classname
-			long unsigned int insertClassNameLength;
-			sqlParam[1].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[1].buffer_length = 32;
-			sqlParam[1].buffer = _className;
-			sqlParam[1].is_null = 0;
-			sqlParam[1].length = &insertClassNameLength;
-
-			// insert type
-			long unsigned int insertTypeLength;
-			sqlParam[2].buffer_type = MYSQL_TYPE_STRING;
-			sqlParam[2].buffer_length = 4096;
-			sqlParam[2].buffer = _type;
-			sqlParam[2].is_null = 0;
-			sqlParam[2].length = &insertTypeLength;
-
-			// bind to statement
-			if (mysql_stmt_bind_param(sqlStatement, sqlParam)) {
-				std::stringstream errorMsg;
-				errorMsg << "mysql_stmt_bind_param() failed: " << mysql_stmt_error(sqlStatement);
-				this->log(errorMsg.str().c_str(), __FUNCTION__);
-			}
-			else {
-				insertSideLength = strlen(_side);
-				insertTypeLength = strlen(_type);
-				insertClassNameLength = strlen(_className);
-
-				if (mysql_stmt_execute(sqlStatement)) {
-					std::stringstream errorMsg;
-					errorMsg << "mysql_stmt_execute() failed: " << mysql_stmt_error(sqlStatement);
-					this->log(errorMsg.str().c_str(), __FUNCTION__);
-				}
-				else {
-					// success :)
-					if (this->debugLogResult) {
-						std::stringstream result;
-						result << "affected rows " << mysql_stmt_affected_rows(sqlStatement);
-						this->log(result.str().c_str(), __FUNCTION__);
-					}
-
-					mysql_stmt_free_result(sqlStatement);
-				}
-			}
-		}
-		else {
-			std::stringstream errorMsg;
-			errorMsg << "mysql_stmt_prepare() failed: " << mysql_stmt_error(sqlStatement) << std::endl;
-			errorMsg << sqlQuery.str();
-			this->log(errorMsg.str().c_str(), __FUNCTION__);
-		}
+	if (sqlStatement == NULL) {
+		this->log("mysql_stmt_init() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return;
 	}
-	else {
-		this->log("Could not initialize statement handler", __FUNCTION__);
+
+	// Prepare statement
+	if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) != 0) {
+		this->log("mysql_stmt_prepare() failed: ", __FUNCTION__, sqlStatement);
+		return;
 	}
+
+	// Zero out the sqlParam data structures
+	memset(sqlParam, 0, sizeof(sqlParam));
+
+	// insert side
+	long unsigned int insertSideLength;
+	sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
+	sqlParam[0].buffer_length = 32;
+	sqlParam[0].buffer = _side;
+	sqlParam[0].is_null = 0;
+	sqlParam[0].length = &insertSideLength;
+
+	// insert classname
+	long unsigned int insertClassNameLength;
+	sqlParam[1].buffer_type = MYSQL_TYPE_STRING;
+	sqlParam[1].buffer_length = 32;
+	sqlParam[1].buffer = _className;
+	sqlParam[1].is_null = 0;
+	sqlParam[1].length = &insertClassNameLength;
+
+	// insert type
+	long unsigned int insertTypeLength;
+	sqlParam[2].buffer_type = MYSQL_TYPE_STRING;
+	sqlParam[2].buffer_length = 4096;
+	sqlParam[2].buffer = _type;
+	sqlParam[2].is_null = 0;
+	sqlParam[2].length = &insertTypeLength;
+
+	// bind to statement
+	if (mysql_stmt_bind_param(sqlStatement, sqlParam) != 0) {
+		this->log("mysql_stmt_bind_param() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	insertSideLength = strlen(_side);
+	insertTypeLength = strlen(_type);
+	insertClassNameLength = strlen(_className);
+
+	if (mysql_stmt_execute(sqlStatement) != 0) {
+		this->log("mysql_stmt_execute() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	// success :)
+	if (this->debugLogResult) {
+		std::stringstream result;
+		result << "affected rows " << mysql_stmt_affected_rows(sqlStatement);
+		this->log(result.str().c_str(), __FUNCTION__);
+	}
+
+	mysql_stmt_free_result(sqlStatement);
+	mysql_stmt_close(sqlStatement);
 }
 void HiveLib::setVehicleActive(__int64 _steamId, int _id, bool _active) {
 	std::stringstream sqlQuery;
@@ -846,15 +804,9 @@ void HiveLib::setVehicleActive(__int64 _steamId, int _id, bool _active) {
 	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
-	if (queryState == 0) {
-
-	}
-	else {
-		// error
-		/*
-		printf(mysql_error(connection));
-		return 1;
-		*/
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return;
 	}
 }
 void HiveLib::setVehicleAlive(__int64 _steamId, int _id, bool _alive) {
@@ -872,15 +824,9 @@ void HiveLib::setVehicleAlive(__int64 _steamId, int _id, bool _alive) {
 	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
-	if (queryState == 0) {
-
-	}
-	else {
-		// error
-		/*
-		printf(mysql_error(connection));
-		return 1;
-		*/
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return;
 	}
 }
 
@@ -895,12 +841,8 @@ void HiveLib::resetVehicles() {
 	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
 
 	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
-	if (queryState == 0) {
-
-	}
-	else {
-		std::stringstream errorMsg;
-		errorMsg << "mysql_query() failed: " << mysql_error(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
-		this->log(errorMsg.str().c_str(), __FUNCTION__);
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return;
 	}
 }
