@@ -304,6 +304,7 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 	}
 
 	mysql_stmt_free_result(sqlStatement);
+	mysql_stmt_close(sqlStatement);
 	mysql_free_result(sqlResult);
 }
 void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_gear, const char *_licenses, bool _arrested, const char *_playerName) {
@@ -422,6 +423,7 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 	}
 
 	mysql_stmt_free_result(sqlStatement);
+	mysql_stmt_close(sqlStatement);
 	mysql_free_result(sqlResult);
 }
 void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_gear, const char *_licenses, bool _arrested, const char *_playerName) {
@@ -540,6 +542,7 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 	}
 
 	mysql_stmt_free_result(sqlStatement);
+	mysql_stmt_close(sqlStatement);
 	mysql_free_result(sqlResult);
 }
 
