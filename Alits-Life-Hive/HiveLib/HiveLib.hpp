@@ -22,10 +22,10 @@ enum {
 };
 
 struct HiveLibDB {
-	char *Hostname;
-	char *Username;
-	char *Password;
-	char *Database;
+	std::string Hostname;
+	std::string Username;
+	std::string Password;
+	std::string Database;
 	unsigned short Port;
 };
 
@@ -34,26 +34,29 @@ private:
 	std::vector<MYSQL*> MySQLStack;
 	bool debugLogQuery;
 	bool debugLogResult;
+
 	// Configfile
 	char *profilePath;
 	config4cpp::Configuration *configuration;
 	HiveLibDB dbConnection;
+
 	// Logging
 	void log(const char *LogMessage);
 	void log(const char *LogMessage, const char *FunctionName);
 	void log(const char *LogMessage, const char *FunctionName, MYSQL *SQLConnection);
 	void log(const char *LogMessage, const char *FunctionName, MYSQL_STMT *SQLStatement);
+
 	// Database connection
 	bool dbConnect(int StackIndex);
 	void dbCheck(int StackIndex);
 
 public:
-	HiveLib();
 	HiveLib(char *ProfilePath);
 	~HiveLib();
 
 	// Get player
 	std::string getPlayer(__int64 SteamId);
+
 	// set player
 	void setPlayerCop(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, const char *PlayerName);
 	void setPlayerCiv(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
@@ -62,11 +65,14 @@ public:
 	// Get vehicle
 	//std::string getVehicle();
 	std::string getVehicles(__int64 SteamId, const char *Side, const char *Type);
+
 	// Insert new vehicles
 	void insertVehicle(__int64 SteamId, char *Side, char *Type, char *Classname, int Color, int Plate);
+
 	// Set vehicle
 	void setVehicleActive(__int64 SteamId, int Id, bool Active);
 	void setVehicleAlive(__int64 SteamId, int Id, bool Alive);
+
 	// Tools
 	void resetVehicles();
 };

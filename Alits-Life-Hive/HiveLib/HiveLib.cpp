@@ -2,43 +2,55 @@
 #include "HiveLib.hpp"
 #include "SQF.hpp"
 
-HiveLib::HiveLib() {
-	exit(1);
-}
 HiveLib::HiveLib(char *_profilePath) {
 	// Disable debug
 	this->debugLogQuery = false;
 	this->debugLogResult = false;
 
 	// Set profile path
+	const char *configFile = "AltisLifeHive.cfg";
 	this->profilePath = _profilePath;
 
 	// Open configfile
 	this->configuration = config4cpp::Configuration::create();
 	std::stringstream configFilePath;
-	configFilePath << this->profilePath << "/" << "AltisLifeHive.cfg";
+	configFilePath << this->profilePath << "/" << configFile;
+
+	// Get config from profile folder
 	try {
 		this->configuration->parse(configFilePath.str().c_str());
-		strcpy(this->dbConnection.Hostname, this->configuration->lookupString("", "Hostname"));
-		strcpy(this->dbConnection.Username, this->configuration->lookupString("", "Username"));
-		strcpy(this->dbConnection.Password, this->configuration->lookupString("", "Password", ""));
-		strcpy(this->dbConnection.Database, this->configuration->lookupString("", "Database"));
-		this->dbConnection.Port = this->configuration->lookupInt("", "Port");
 	}
-	catch (...) {
+	catch (const config4cpp::ConfigurationException & exProfile) {
+		std::stringstream errorMsg;
+		errorMsg << exProfile.c_str() << " -- fallback to config in root folder";
+		this->log(errorMsg.str().c_str(), __FUNCTION__);
+		
+		// Get config from root folder
 		try {
-			this->configuration->parse("AltisLifeHive.cfg");
-			strcpy(this->dbConnection.Hostname, this->configuration->lookupString("", "Hostname"));
-			strcpy(this->dbConnection.Username, this->configuration->lookupString("", "Username"));
-			strcpy(this->dbConnection.Password, this->configuration->lookupString("", "Password", ""));
-			strcpy(this->dbConnection.Database, this->configuration->lookupString("", "Database"));
-			this->dbConnection.Port = this->configuration->lookupInt("", "Port");
+			this->configuration->parse(configFile);
 		}
-		catch (const config4cpp::ConfigurationException & ex) {
-			this->log(ex.c_str(), __FUNCTION__);
+		catch (const config4cpp::ConfigurationException & exRoot) {
+			this->log(exRoot.c_str(), __FUNCTION__);
 			this->configuration->destroy();
 			exit(1);
 		}
+	}
+
+	try {
+		// Parse configfile
+		this->configuration->parse(configFilePath.str().c_str());
+
+		// Read config
+		this->dbConnection.Hostname = this->configuration->lookupString("", "Hostname");
+		this->dbConnection.Username = this->configuration->lookupString("", "Username");
+		this->dbConnection.Password = this->configuration->lookupString("", "Password");
+		this->dbConnection.Database = this->configuration->lookupString("", "Database");
+		this->dbConnection.Port = this->configuration->lookupInt("", "Port");
+	}
+	catch (const config4cpp::ConfigurationException & ex) {
+		this->log(ex.c_str(), __FUNCTION__);
+		this->configuration->destroy();
+		exit(1);
 	}
 
 	// Init MySQL connections
@@ -95,7 +107,7 @@ void HiveLib::log(const char *_logMessage, const char *_functionName, MYSQL_STMT
 }
 
 bool HiveLib::dbConnect(int _stackIndex) {
-	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname, this->dbConnection.Username, this->dbConnection.Password, this->dbConnection.Database, this->dbConnection.Port, NULL, 0)) {
+	if (!mysql_real_connect(this->MySQLStack[_stackIndex], this->dbConnection.Hostname.c_str(), this->dbConnection.Username.c_str(), this->dbConnection.Password.c_str(), this->dbConnection.Database.c_str(), this->dbConnection.Port, NULL, 0)) {
 		this->log("Failed to connect to database: ", __FUNCTION__, this->MySQLStack[_stackIndex]);
 		return false;
 	}
@@ -584,8 +596,6 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 	char vehiclePid[32];
 	short int vehicleAlive;
 	short int vehicleActive;
-	//char vehicleAlive[1];
-	//char vehicleActive[1];
 	char vehiclePlate[20];
 	char vehicleColor[20];
 	char vehicleInventory[500];
@@ -625,13 +635,11 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 	sqlResult[2].length = &sqlResultLength[2];
 
 	sqlResult[3].buffer_type = MYSQL_TYPE_TINY;
-	//sqlResult[3].buffer_length = sizeof(vehicleAlive);
 	sqlResult[3].buffer = (void *)&vehicleAlive;
 	sqlResult[3].is_null = &sqlResultIsNull[3];
 	sqlResult[3].length = &sqlResultLength[3];
 
 	sqlResult[4].buffer_type = MYSQL_TYPE_TINY;
-	//sqlResult[4].buffer_length = sizeof(vehicleActive);
 	sqlResult[4].buffer = (void *)&vehicleActive;
 	sqlResult[4].is_null = &sqlResultIsNull[4];
 	sqlResult[4].length = &sqlResultLength[4];
@@ -764,7 +772,7 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 	sqlParam[2].is_null = 0;
 	sqlParam[2].length = &insertTypeLength;
 
-	// bind to statement
+	// Bind buffer to statement
 	if (mysql_stmt_bind_param(sqlStatement, sqlParam) != 0) {
 		this->log("mysql_stmt_bind_param() failed: ", __FUNCTION__, sqlStatement);
 		return;
@@ -774,6 +782,7 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 	insertTypeLength = strlen(_type);
 	insertClassNameLength = strlen(_className);
 
+	// Execute statement
 	if (mysql_stmt_execute(sqlStatement) != 0) {
 		this->log("mysql_stmt_execute() failed: ", __FUNCTION__, sqlStatement);
 		return;
