@@ -562,7 +562,7 @@ std::string HiveLib::getVehicle(__int64 _steamId, int _vehicleId) {
 	sqlQuery << "color, ";
 	sqlQuery << "REPLACE(inventory, '\"', '') ";
 	sqlQuery << "FROM vehicles ";
-	sqlQuery << "WHERE id = '" << _steamId << "' AND pid = '" << _vehicleId << "';";
+	sqlQuery << "WHERE id = '" << _vehicleId << "' AND pid = '" << _steamId << "';";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -592,11 +592,6 @@ std::string HiveLib::getVehicle(__int64 _steamId, int _vehicleId) {
 		sqfRow.push_str(queryRow[7]);
 		sqfRow.push_str(queryRow[8]);
 		sqfRow.push_str(queryRow[9]);
-		sqfRow.push_str(queryRow[10]);
-		sqfRow.push_str(queryRow[11]);
-		sqfRow.push_str(queryRow[12]);
-		sqfRow.push_str(queryRow[13]);
-		sqfRow.push_str(queryRow[14]);
 		returnString = sqfRow.toArray();
 		if (this->debugLogResult) {
 			this->log(returnString.c_str(), __FUNCTION__);
