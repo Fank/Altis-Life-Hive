@@ -18,7 +18,8 @@
 enum {
 	HIVELIB_MYSQL_CONNECTION_PLAYER = 0,
 	HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE,
-	HIVELIB_MYSQL_CONNECTION_VEHICLE
+	HIVELIB_MYSQL_CONNECTION_VEHICLE,
+	HIVELIB_MYSQL_CONNECTION_HOUSING
 };
 
 struct HiveLibDB {
@@ -63,7 +64,7 @@ public:
 	void setPlayerReb(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
 
 	// Get vehicle
-	//std::string getVehicle();
+	std::string getVehicle(__int64 SteamId, int VehicleId);
 	std::string getVehicles(__int64 SteamId, const char *Side, const char *Type);
 
 	// Insert new vehicles
@@ -75,6 +76,18 @@ public:
 
 	// Tools
 	void resetVehicles();
+
+	// Get house
+	std::string getHouse(int HouseObjectId);
+	std::string getHouses(__int64 SteamId);
+
+	// House management
+	std::string buyHouse(__int64 SteamId, int HouseObjectId);
+	std::string sellHouse(__int64 SteamId, int HouseObjectId);
+	std::string upgradeHouse(__int64 SteamId, int HouseObjectId);
+
+	// House actions
+	void updateHouseInventory(int HouseObjectId, char *Inventory);
 };
 
 #endif

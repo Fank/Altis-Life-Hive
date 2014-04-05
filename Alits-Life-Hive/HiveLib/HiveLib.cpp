@@ -4,8 +4,8 @@
 
 HiveLib::HiveLib(char *_profilePath) {
 	// Disable debug
-	this->debugLogQuery = false;
-	this->debugLogResult = false;
+	this->debugLogQuery = true;
+	this->debugLogResult = true;
 
 	// Set profile path
 	const char *configFile = "AltisLifeHive.cfg";
@@ -547,6 +547,66 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 }
 
 // Get vehicle
+std::string HiveLib::getVehicle(__int64 _steamId, int _vehicleId) {
+	std::string returnString = "[]";
+	std::stringstream sqlQuery;
+	sqlQuery << "SELECT ";
+	sqlQuery << "id, ";
+	sqlQuery << "side, ";
+	sqlQuery << "classname, ";
+	sqlQuery << "type, ";
+	sqlQuery << "pid, ";
+	sqlQuery << "alive, ";
+	sqlQuery << "active, ";
+	sqlQuery << "plate, ";
+	sqlQuery << "color, ";
+	sqlQuery << "REPLACE(inventory, '\"', '') ";
+	sqlQuery << "FROM vehicles ";
+	sqlQuery << "WHERE id = '" << _steamId << "' AND pid = '" << _vehicleId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return returnString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+	MYSQL_ROW queryRow;
+
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfRow;
+		sqfRow.push_str(queryRow[0]);
+		sqfRow.push_str(queryRow[1]);
+		sqfRow.push_str(queryRow[2]);
+		sqfRow.push_str(queryRow[3]);
+		sqfRow.push_str(queryRow[4]);
+		sqfRow.push_str(queryRow[5]);
+		sqfRow.push_str(queryRow[6]);
+		sqfRow.push_str(queryRow[7]);
+		sqfRow.push_str(queryRow[8]);
+		sqfRow.push_str(queryRow[9]);
+		sqfRow.push_str(queryRow[10]);
+		sqfRow.push_str(queryRow[11]);
+		sqfRow.push_str(queryRow[12]);
+		sqfRow.push_str(queryRow[13]);
+		sqfRow.push_str(queryRow[14]);
+		returnString = sqfRow.toArray();
+		if (this->debugLogResult) {
+			this->log(returnString.c_str(), __FUNCTION__);
+		}
+	}
+
+	mysql_free_result(queryResult);
+
+	return returnString;
+}
 std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char *_type) {
 	std::string vehicleString = "[]";
 	MYSQL_STMT *sqlStatement;
@@ -851,4 +911,461 @@ void HiveLib::resetVehicles() {
 		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
 		return;
 	}
+}
+
+std::string HiveLib::getHouse(int _houseObjectId) {
+	std::string returnString = "[]";
+	std::stringstream sqlQuery;
+	sqlQuery << "SELECT ";
+	sqlQuery << "h.i_level, ";
+	sqlQuery << "(SELECT MAX(i_level) FROM houselevel WHERE i_class_id = h.i_class_id), ";
+	sqlQuery << "IFNULL((SELECT SUM(i_level) FROM house2upgrade WHERE i_house_id = h.id), 0), ";
+	sqlQuery << "hl.i_upgrademax, ";
+	sqlQuery << "hp.i_price, ";
+	sqlQuery << "hp.i_tax, ";
+	sqlQuery << "hl.i_cost, ";
+	sqlQuery << "hl.i_upgradeprice, ";
+	sqlQuery << "h.s_playeruid ";
+	sqlQuery << "FROM ";
+	sqlQuery << "house h ";
+	sqlQuery << "JOIN houselevel hl ON hl.i_class_id = h.i_class_id AND hl.i_level = h.i_level ";
+	sqlQuery << "JOIN houseprice hp ON hp.i_class_id = h.i_class_id ";
+	sqlQuery << "WHERE ";
+	sqlQuery << " i_object_id = '" << _houseObjectId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_HOUSING);
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+	MYSQL_ROW queryRow;
+
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfRow;
+
+		sqfRow.push_str(queryRow[0]);
+		sqfRow.push_str(queryRow[1]);
+		sqfRow.push_str(queryRow[2]);
+		sqfRow.push_str(queryRow[3]);
+		sqfRow.push_str(queryRow[4]);
+		sqfRow.push_str(queryRow[5]);
+		sqfRow.push_str(queryRow[6]);
+		sqfRow.push_str(queryRow[7]);
+		sqfRow.push_str(queryRow[8]);
+
+		if (queryRow[8] != "0") {
+			SQF sqfRowUpgrades;
+			std::stringstream sqlQueryUpgrades;;
+			sqlQueryUpgrades << "SELECT ";
+			sqlQueryUpgrades << "hu.id, ";
+			sqlQueryUpgrades << "hu.s_name, ";
+			sqlQueryUpgrades << "IFNULL((SELECT h2u.i_level FROM house2upgrade h2u INNER JOIN house h ON h.id = h2u.i_house_id WHERE h2u.i_upgrade_id = hu.id AND h.id = '" << _houseObjectId << "'),0) ";
+			sqlQueryUpgrades << "FROM ";
+			sqlQueryUpgrades << "houseupgrade hu;";
+			if (this->debugLogQuery) {
+				this->log(sqlQueryUpgrades.str().c_str(), __FUNCTION__);
+			}
+
+			// Init statement
+			int queryStateUpgrades = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQueryUpgrades.str().c_str());
+			if (queryStateUpgrades != 0) {
+				this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+				return returnString;
+			}
+
+			MYSQL_RES *queryUpgradesResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+			MYSQL_ROW queryUpgradeRow;
+
+			while ((queryUpgradeRow = mysql_fetch_row(queryUpgradesResult)) != NULL) {
+				SQF sqfRowUpgrade;
+				sqfRowUpgrade.push_str(queryUpgradeRow[0]);
+				sqfRowUpgrade.push_str(queryUpgradeRow[1]);
+				sqfRowUpgrade.push_str(queryUpgradeRow[2]);
+
+				sqfRowUpgrades.push_array((char *)sqfRowUpgrade.toArray().c_str());
+			}
+			
+			sqfRow.push_array((char *)sqfRowUpgrades.toArray().c_str());
+		}
+		else {
+			sqfRow.push_array("[]");
+		}
+		
+		returnString = sqfRow.toArray();
+		if (this->debugLogResult) {
+			this->log(returnString.c_str(), __FUNCTION__);
+		}
+	}
+
+	mysql_free_result(queryResult);
+
+	return returnString;
+}
+std::string HiveLib::getHouses(__int64 _steamId) {
+	std::string returnString = "[]";
+	std::stringstream sqlQuery;
+	sqlQuery << "SELECT ";
+	sqlQuery << "h.id, ";
+	sqlQuery << "h.i_object_id, ";
+	sqlQuery << "h.s_position, ";
+	sqlQuery << "REPLACE(h.s_inventory, '\"', '') ";
+	sqlQuery << "FROM ";
+	sqlQuery << "house h ";
+	//sqlQuery << "JOIN houselevel hl ON hl.i_class_id = h.i_class_id AND hl.i_level = h.i_level ";
+	//sqlQuery << "JOIN houseprice hp ON hp.i_class_id = h.i_class_id ";
+	sqlQuery << "WHERE ";
+	sqlQuery << " h.s_playeruid = '" << _steamId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_HOUSING);
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+	MYSQL_ROW queryRow;
+
+	SQF sqfHouses;
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfRow;
+		sqfRow.push_str(queryRow[0]);
+		sqfRow.push_str(queryRow[1]);
+		sqfRow.push_str(queryRow[2]);
+		sqfRow.push_str(queryRow[3]);
+		sqfHouses.push_array((char *)sqfRow.toArray().c_str());
+	}
+	returnString = sqfHouses.toArray();
+	if (this->debugLogResult) {
+		this->log(returnString.c_str(), __FUNCTION__);
+	}
+
+	mysql_free_result(queryResult);
+
+	return returnString;
+}
+
+std::string HiveLib::buyHouse(__int64 _steamId, int _houseObjectId) {
+	std::string returnString = "[]";
+	std::stringstream sqlQuery;
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_HOUSING);
+
+	sqlQuery << "SET @SteamId = '" << _steamId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "SET @HouseObjectId = '" << _houseObjectId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "CALL `buyHouse`(@SteamId, @HouseObjectId, @returnCode);";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "SELECT ";
+	sqlQuery << "@returnCode, ";
+	sqlQuery << "s_position ";
+	sqlQuery << "FROM ";
+	sqlQuery << "house ";
+	sqlQuery << "WHERE ";
+	sqlQuery << "i_object_id = @HouseObjectId";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+	MYSQL_ROW queryRow;
+
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfRow;
+		sqfRow.push_str(queryRow[0]);
+		sqfRow.push_str(queryRow[1]);
+		returnString = sqfRow.toArray();
+	}
+	if (this->debugLogResult) {
+		this->log(returnString.c_str(), __FUNCTION__);
+	}
+
+	mysql_free_result(queryResult);
+
+	return returnString;
+}
+std::string HiveLib::sellHouse(__int64 _steamId, int _houseObjectId) {
+	std::string returnString = "[]";
+	std::stringstream sqlQuery;
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_HOUSING);
+
+	sqlQuery << "SET @SteamId = '" << _steamId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "SET @HouseObjectId = '" << _houseObjectId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "CALL `sellHouse`(@SteamId, @HouseObjectId, @returnCode);";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "SELECT ";
+	sqlQuery << "@returnCode, ";
+	sqlQuery << "s_position ";
+	sqlQuery << "FROM ";
+	sqlQuery << "house ";
+	sqlQuery << "WHERE ";
+	sqlQuery << "i_object_id = @HouseObjectId";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+	MYSQL_ROW queryRow;
+
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfRow;
+		sqfRow.push_str(queryRow[0]);
+		sqfRow.push_str(queryRow[1]);
+		returnString = sqfRow.toArray();
+	}
+	if (this->debugLogResult) {
+		this->log(returnString.c_str(), __FUNCTION__);
+	}
+
+	mysql_free_result(queryResult);
+
+	return returnString;
+}
+std::string HiveLib::upgradeHouse(__int64 _steamId, int _houseObjectId) {
+	std::string returnString = "[]";
+	std::stringstream sqlQuery;
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_HOUSING);
+
+	sqlQuery << "SET @SteamId = '" << _steamId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "SET @HouseObjectId = '" << _houseObjectId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "CALL `upgradeHouse`(@SteamId, @HouseObjectId, @returnCode, @houseLevel);";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	sqlQuery.str("");
+	sqlQuery << "SELECT ";
+	sqlQuery << "@returnCode, ";
+	sqlQuery << "@houseLevel, ";
+	sqlQuery << "s_position ";
+	sqlQuery << "FROM ";
+	sqlQuery << "house ";
+	sqlQuery << "WHERE ";
+	sqlQuery << "i_object_id = @HouseObjectId";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// Init statement
+	queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+		return returnString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_HOUSING]);
+	MYSQL_ROW queryRow;
+
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfRow;
+		sqfRow.push_str(queryRow[0]);
+		sqfRow.push_str(queryRow[1]);
+		sqfRow.push_str(queryRow[2]);
+		returnString = sqfRow.toArray();
+	}
+	if (this->debugLogResult) {
+		this->log(returnString.c_str(), __FUNCTION__);
+	}
+
+	mysql_free_result(queryResult);
+
+	return returnString;
+}
+
+void HiveLib::updateHouseInventory(int _houseObjectId, char *_inventory) {
+	MYSQL_STMT *sqlStatement;
+	MYSQL_BIND sqlParam[1];
+
+	std::stringstream sqlQuery;
+	sqlQuery << "UPDATE house SET ";
+	sqlQuery << "s_inventory = ? ";
+	sqlQuery << "WHERE i_object_id = '" << _houseObjectId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+
+	// Init statement
+	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+	if (sqlStatement == NULL) {
+		this->log("mysql_stmt_init() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return;
+	}
+
+	// Prepare statement
+	if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) != 0) {
+		this->log("mysql_stmt_prepare() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	// Zero out the sqlParam data structures
+	memset(sqlParam, 0, sizeof(sqlParam));
+
+	// insert side
+	long unsigned int updateInventoryLength;
+	sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
+	sqlParam[0].buffer_length = 32;
+	sqlParam[0].buffer = _inventory;
+	sqlParam[0].is_null = 0;
+	sqlParam[0].length = &updateInventoryLength;
+
+	// Bind buffer to statement
+	if (mysql_stmt_bind_param(sqlStatement, sqlParam) != 0) {
+		this->log("mysql_stmt_bind_param() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	updateInventoryLength = strlen(_inventory);
+
+	// Execute statement
+	if (mysql_stmt_execute(sqlStatement) != 0) {
+		this->log("mysql_stmt_execute() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	// success :)
+	if (this->debugLogResult) {
+		std::stringstream result;
+		result << "affected rows " << mysql_stmt_affected_rows(sqlStatement);
+		this->log(result.str().c_str(), __FUNCTION__);
+	}
+
+	mysql_stmt_free_result(sqlStatement);
+	mysql_stmt_close(sqlStatement);
 }

@@ -296,15 +296,139 @@ std::string handler203(std::vector<std::string> _param) {
 	return "";
 }
 
+// get vehicle
+std::string handler204(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 3) {
+		try {
+			return HiveLibrary->getVehicle(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
 // set vehicle alive
 std::string handler299(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
 		exit(1);
 	}
 
-	if (_param.size() == 4) {
+	try {
+		HiveLibrary->resetVehicles();
+	}
+	catch (...) {
+
+	}
+
+	return "";
+}
+
+// get house
+std::string handler300(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 2) {
 		try {
-			HiveLibrary->resetVehicles();
+			return HiveLibrary->getHouse(atoi(_param[1].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+// get houses
+std::string handler301(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 2) {
+		try {
+			return HiveLibrary->getHouses(_atoi64(_param[1].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+// buy house
+std::string handler302(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 3) {
+		try {
+			return HiveLibrary->buyHouse(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+// sell house
+std::string handler303(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 3) {
+		try {
+			return HiveLibrary->sellHouse(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+// upgrade house
+std::string handler304(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 3) {
+		try {
+			return HiveLibrary->upgradeHouse(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+// update house inventory
+std::string handler305(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 3) {
+		try {
+			HiveLibrary->updateHouseInventory(atoi(_param[1].c_str()), (char *)_param[2].c_str());
 		}
 		catch (...) {
 
@@ -355,8 +479,29 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 		else if (rawCmd[0] == "203") {
 			hiveOutput = handler203(rawCmd);
 		}
+		else if (rawCmd[0] == "204") {
+			hiveOutput = handler204(rawCmd);
+		}
 		else if (rawCmd[0] == "299") {
 			hiveOutput = handler299(rawCmd);
+		}
+		else if (rawCmd[0] == "300") {
+			hiveOutput = handler300(rawCmd);
+		}
+		else if (rawCmd[0] == "301") {
+			hiveOutput = handler301(rawCmd);
+		}
+		else if (rawCmd[0] == "302") {
+			hiveOutput = handler302(rawCmd);
+		}
+		else if (rawCmd[0] == "303") {
+			hiveOutput = handler303(rawCmd);
+		}
+		else if (rawCmd[0] == "304") {
+			hiveOutput = handler304(rawCmd);
+		}
+		else if (rawCmd[0] == "305") {
+			hiveOutput = handler305(rawCmd);
 		}
 	}
 
