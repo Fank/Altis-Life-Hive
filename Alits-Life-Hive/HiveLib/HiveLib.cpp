@@ -137,13 +137,13 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	std::string playerString = "[]";
 	std::stringstream sqlQuery;
 	sqlQuery << "SELECT ";
-	sqlQuery << "playerid, REPLACE(name, '\"', '\"\"'), adminlevel, blacklist, donatorlvl, arrested, "; // Player
-	sqlQuery << "cash, bankacc, "; // Money
-	sqlQuery << "coplevel, REPLACE(cop_licenses, '\"', ''), REPLACE(cop_gear, '\"', ''), "; // COP
-	sqlQuery << "REPLACE(civ_licenses, '\"', ''), REPLACE(civ_gear, '\"', ''), "; // Civ
-	sqlQuery << "reblevel, REPLACE(reb_gear, '\"', '') "; // Reb
-	sqlQuery << "FROM players ";
-	sqlQuery << "WHERE playerid = '" << _steamId << "'";
+	sqlQuery << "`playerid`, REPLACE(`name`, '\"', '\"\"'), `adminlevel`, `blacklist`, `donatorlvl`, `arrested`, "; // Player
+	sqlQuery << "`cash`, `bankacc`, "; // Money
+	sqlQuery << "`coplevel`, REPLACE(`cop_licenses`, '\"', ''), REPLACE(`cop_gear`, '\"', ''), "; // COP
+	sqlQuery << "REPLACE(`civ_licenses`, '\"', ''), REPLACE(`civ_gear`, '\"', ''), "; // Civ
+	sqlQuery << "`reblevel`, REPLACE(`reb_gear`, '\"', '') "; // Reb
+	sqlQuery << "FROM `players` ";
+	sqlQuery << "WHERE `playerid` = '" << _steamId << "'";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -199,13 +199,13 @@ void HiveLib::setPlayerCop(__int64 _steamId, int _cash, int _bank, const char *_
 	sqlQuery << "?, "; // Insert name
 	sqlQuery << "'" << _cash << "', "; // Insert cash
 	sqlQuery << "'" << _bank << "', "; // Insert bank
-	sqlQuery << "? "; // Insert gear
+	sqlQuery << "REPLACE(?, '\"', '') "; // Insert gear
 	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
 	sqlQuery << "`name` = ?, ";
 	sqlQuery << "`cash` = " << _cash << ", ";
 	sqlQuery << "`bankacc` = " << _bank << ", ";
-	sqlQuery << "`cop_gear` = ?, ";
-	sqlQuery << "`cop_licenses` = ?, ";
+	sqlQuery << "`cop_gear` = REPLACE(?, '\"', ''), ";
+	sqlQuery << "`cop_licenses` = REPLACE(?, '\"', ''), ";
 	sqlQuery << "`lastupdate` = NOW()";
 	sqlQuery << ";";
 	if (this->debugLogQuery) {
@@ -317,13 +317,13 @@ void HiveLib::setPlayerCiv(__int64 _steamId, int _cash, int _bank, const char *_
 	sqlQuery << "?, "; // Insert name
 	sqlQuery << "'" << _cash << "', "; // Insert cash
 	sqlQuery << "'" << _bank << "', "; // Insert bank
-	sqlQuery << "? "; // Insert gear
+	sqlQuery << "REPLACE(?, '\"', '') "; // Insert gear
 	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
 	sqlQuery << "`name` = ?, ";
 	sqlQuery << "`cash` = " << _cash << ", ";
 	sqlQuery << "`bankacc` = " << _bank << ", ";
-	sqlQuery << "`civ_gear` = ?, ";
-	sqlQuery << "`civ_licenses` = ?, ";
+	sqlQuery << "`civ_gear` = REPLACE(?, '\"', ''), ";
+	sqlQuery << "`civ_licenses` = REPLACE(?, '\"', ''), ";
 	sqlQuery << "`arrested` = " << (_arrested ? 1 : 0) << ", ";
 	sqlQuery << "`lastupdate` = NOW()";
 	sqlQuery << ";";
@@ -436,13 +436,13 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 	sqlQuery << "?, "; // Insert name
 	sqlQuery << "'" << _cash << "', "; // Insert cash
 	sqlQuery << "'" << _bank << "', "; // Insert bank
-	sqlQuery << "? "; // Insert gear
+	sqlQuery << "REPLACE(?, '\"', '') "; // Insert gear
 	sqlQuery << ") ON DUPLICATE KEY UPDATE ";
 	sqlQuery << "`name` = ?, ";
 	sqlQuery << "`cash` = " << _cash << ", ";
 	sqlQuery << "`bankacc` = " << _bank << ", ";
-	sqlQuery << "`reb_gear` = ?, ";
-	//sqlQuery << "`civ_licenses` = ?, ";
+	sqlQuery << "`reb_gear` = REPLACE(?, '\"', ''), ";
+	//sqlQuery << "`civ_licenses` = REPLACE(?, '\"', ''), ";
 	sqlQuery << "`arrested` = " << (_arrested ? 1 : 0) << ", ";
 	sqlQuery << "`lastupdate` = NOW()";
 	sqlQuery << ";";
@@ -551,18 +551,18 @@ std::string HiveLib::getVehicle(__int64 _steamId, int _vehicleId) {
 	std::string returnString = "[]";
 	std::stringstream sqlQuery;
 	sqlQuery << "SELECT ";
-	sqlQuery << "id, ";
-	sqlQuery << "side, ";
-	sqlQuery << "classname, ";
-	sqlQuery << "type, ";
-	sqlQuery << "pid, ";
-	sqlQuery << "alive, ";
-	sqlQuery << "active, ";
-	sqlQuery << "plate, ";
-	sqlQuery << "color, ";
-	sqlQuery << "REPLACE(inventory, '\"', '') ";
-	sqlQuery << "FROM vehicles ";
-	sqlQuery << "WHERE id = '" << _vehicleId << "' AND pid = '" << _steamId << "';";
+	sqlQuery << "`id`, ";
+	sqlQuery << "`side`, ";
+	sqlQuery << "`classname`, ";
+	sqlQuery << "`type`, ";
+	sqlQuery << "`pid`, ";
+	sqlQuery << "`alive`, ";
+	sqlQuery << "`active`, ";
+	sqlQuery << "`plate`, ";
+	sqlQuery << "`color`, ";
+	sqlQuery << "REPLACE(`inventory`, '\"', '') ";
+	sqlQuery << "FROM `vehicles` ";
+	sqlQuery << "WHERE `id` = '" << _vehicleId << "' AND `pid` = '" << _steamId << "';";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -918,21 +918,21 @@ std::string HiveLib::getHouse(int _houseObjectId) {
 	std::string returnString = "[]";
 	std::stringstream sqlQuery;
 	sqlQuery << "SELECT ";
-	sqlQuery << "h.i_level, ";
-	sqlQuery << "(SELECT MAX(i_level) FROM houselevel WHERE i_class_id = h.i_class_id), ";
-	sqlQuery << "IFNULL((SELECT SUM(i_level) FROM house2upgrade WHERE i_house_id = h.id), 0), ";
-	sqlQuery << "hl.i_upgrademax, ";
-	sqlQuery << "hp.i_price, ";
-	sqlQuery << "hp.i_tax, ";
-	sqlQuery << "hl.i_cost, ";
-	sqlQuery << "hl.i_upgradeprice, ";
-	sqlQuery << "h.s_playeruid ";
+	sqlQuery << "h.`i_level`, ";
+	sqlQuery << "(SELECT MAX(`i_level`) FROM `houselevel` WHERE `i_class_id` = h.`i_class_id`), ";
+	sqlQuery << "IFNULL((SELECT SUM(`i_level`) FROM `house2upgrade` WHERE `i_house_id` = h.`id`), 0), ";
+	sqlQuery << "hl.`i_upgrademax`, ";
+	sqlQuery << "hp.`i_price`, ";
+	sqlQuery << "hp.`i_tax`, ";
+	sqlQuery << "hl.`i_cost`, ";
+	sqlQuery << "hl.`i_upgradeprice`, ";
+	sqlQuery << "h.`s_playeruid` ";
 	sqlQuery << "FROM ";
-	sqlQuery << "house h ";
-	sqlQuery << "JOIN houselevel hl ON hl.i_class_id = h.i_class_id AND hl.i_level = h.i_level ";
-	sqlQuery << "JOIN houseprice hp ON hp.i_class_id = h.i_class_id ";
+	sqlQuery << "`house` h ";
+	sqlQuery << "JOIN `houselevel` hl ON hl.`i_class_id` = h.`i_class_id` AND hl.`i_level` = h.`i_level` ";
+	sqlQuery << "JOIN `houseprice` hp ON hp.`i_class_id` = h.`i_class_id` ";
 	sqlQuery << "WHERE ";
-	sqlQuery << " i_object_id = '" << _houseObjectId << "';";
+	sqlQuery << " `i_object_id` = '" << _houseObjectId << "';";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -967,11 +967,11 @@ std::string HiveLib::getHouse(int _houseObjectId) {
 			SQF sqfRowUpgrades;
 			std::stringstream sqlQueryUpgrades;;
 			sqlQueryUpgrades << "SELECT ";
-			sqlQueryUpgrades << "hu.id, ";
-			sqlQueryUpgrades << "hu.s_name, ";
-			sqlQueryUpgrades << "IFNULL((SELECT h2u.i_level FROM house2upgrade h2u INNER JOIN house h ON h.id = h2u.i_house_id WHERE h2u.i_upgrade_id = hu.id AND h.id = '" << _houseObjectId << "'),0) ";
+			sqlQueryUpgrades << "hu.`id`, ";
+			sqlQueryUpgrades << "hu.`s_name`, ";
+			sqlQueryUpgrades << "IFNULL((SELECT h2u.`i_level` FROM `house2upgrade` h2u INNER JOIN `house` h ON h.`id` = h2u.`i_house_id` WHERE h2u.`i_upgrade_id` = hu.`id` AND h.`id` = '" << _houseObjectId << "'),0) ";
 			sqlQueryUpgrades << "FROM ";
-			sqlQueryUpgrades << "houseupgrade hu;";
+			sqlQueryUpgrades << "`houseupgrade` hu;";
 			if (this->debugLogQuery) {
 				this->log(sqlQueryUpgrades.str().c_str(), __FUNCTION__);
 			}
@@ -1015,16 +1015,16 @@ std::string HiveLib::getHouses(__int64 _steamId) {
 	std::string returnString = "[]";
 	std::stringstream sqlQuery;
 	sqlQuery << "SELECT ";
-	sqlQuery << "h.id, ";
-	sqlQuery << "h.i_object_id, ";
-	sqlQuery << "h.s_position, ";
-	sqlQuery << "REPLACE(h.s_inventory, '\"', '') ";
+	sqlQuery << "h.`id`, ";
+	sqlQuery << "h.`i_object_id`, ";
+	sqlQuery << "h.`s_position`, ";
+	sqlQuery << "REPLACE(h.`s_inventory`, '\"', '') ";
 	sqlQuery << "FROM ";
-	sqlQuery << "house h ";
-	//sqlQuery << "JOIN houselevel hl ON hl.i_class_id = h.i_class_id AND hl.i_level = h.i_level ";
-	//sqlQuery << "JOIN houseprice hp ON hp.i_class_id = h.i_class_id ";
+	sqlQuery << "`house` h ";
+	//sqlQuery << "JOIN `houselevel` hl ON hl.`i_class_id` = h.`i_class_id` AND hl.`i_level` = h.`i_level` ";
+	//sqlQuery << "JOIN `houseprice` hp ON hp.`i_class_id` = h.`i_class_id` ";
 	sqlQuery << "WHERE ";
-	sqlQuery << " h.s_playeruid = '" << _steamId << "';";
+	sqlQuery << " h.`s_playeruid` = '" << _steamId << "';";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -1109,11 +1109,11 @@ std::string HiveLib::buyHouse(__int64 _steamId, int _houseObjectId) {
 	sqlQuery.str("");
 	sqlQuery << "SELECT ";
 	sqlQuery << "@returnCode, ";
-	sqlQuery << "s_position ";
+	sqlQuery << "`s_position` ";
 	sqlQuery << "FROM ";
-	sqlQuery << "house ";
+	sqlQuery << "`house` ";
 	sqlQuery << "WHERE ";
-	sqlQuery << "i_object_id = @HouseObjectId";
+	sqlQuery << "`i_object_id` = @HouseObjectId";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -1190,11 +1190,11 @@ std::string HiveLib::sellHouse(__int64 _steamId, int _houseObjectId) {
 	sqlQuery.str("");
 	sqlQuery << "SELECT ";
 	sqlQuery << "@returnCode, ";
-	sqlQuery << "s_position ";
+	sqlQuery << "`s_position` ";
 	sqlQuery << "FROM ";
-	sqlQuery << "house ";
+	sqlQuery << "`house` ";
 	sqlQuery << "WHERE ";
-	sqlQuery << "i_object_id = @HouseObjectId";
+	sqlQuery << "`i_object_id` = @HouseObjectId";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -1272,11 +1272,11 @@ std::string HiveLib::upgradeHouse(__int64 _steamId, int _houseObjectId) {
 	sqlQuery << "SELECT ";
 	sqlQuery << "@returnCode, ";
 	sqlQuery << "@houseLevel, ";
-	sqlQuery << "s_position ";
+	sqlQuery << "`s_position` ";
 	sqlQuery << "FROM ";
-	sqlQuery << "house ";
+	sqlQuery << "`house` ";
 	sqlQuery << "WHERE ";
-	sqlQuery << "i_object_id = @HouseObjectId";
+	sqlQuery << "`i_object_id` = @HouseObjectId";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
@@ -1312,9 +1312,9 @@ void HiveLib::updateHouseInventory(int _houseObjectId, char *_inventory) {
 	MYSQL_BIND sqlParam[1];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "UPDATE house SET ";
-	sqlQuery << "s_inventory = ? ";
-	sqlQuery << "WHERE i_object_id = '" << _houseObjectId << "';";
+	sqlQuery << "UPDATE `house` SET ";
+	sqlQuery << "`s_inventory` = ? ";
+	sqlQuery << "WHERE `i_object_id` = '" << _houseObjectId << "';";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
 	}
