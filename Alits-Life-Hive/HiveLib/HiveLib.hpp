@@ -68,7 +68,7 @@ public:
 	std::string getVehicles(__int64 SteamId, const char *Side, const char *Type);
 
 	// Insert new vehicles
-	void insertVehicle(__int64 SteamId, char *Side, char *Type, char *Classname, int Color, int Plate);
+	std::string insertVehicle(__int64 SteamId, char *Side, char *Type, char *Classname, int Color, int Plate);
 
 	// Set vehicle
 	void setVehicleActive(__int64 SteamId, int Id, bool Active);

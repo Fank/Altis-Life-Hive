@@ -761,7 +761,8 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 
 	return vehicleString;
 }
-void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_className, int _color, int _plate) {
+std::string HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_className, int _color, int _plate) {
+	std::stringstream returnString;
 	MYSQL_STMT *sqlStatement;
 	MYSQL_BIND sqlParam[3];
 
@@ -788,13 +789,13 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
 	if (sqlStatement == NULL) {
 		this->log("mysql_stmt_init() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
-		return;
+		return std::string("");
 	}
 
 	// Prepare statement
 	if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) != 0) {
 		this->log("mysql_stmt_prepare() failed: ", __FUNCTION__, sqlStatement);
-		return;
+		return std::string("");
 	}
 
 	// Zero out the sqlParam data structures
@@ -827,7 +828,7 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 	// Bind buffer to statement
 	if (mysql_stmt_bind_param(sqlStatement, sqlParam) != 0) {
 		this->log("mysql_stmt_bind_param() failed: ", __FUNCTION__, sqlStatement);
-		return;
+		return std::string("");
 	}
 
 	insertSideLength = strlen(_side);
@@ -837,7 +838,7 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 	// Execute statement
 	if (mysql_stmt_execute(sqlStatement) != 0) {
 		this->log("mysql_stmt_execute() failed: ", __FUNCTION__, sqlStatement);
-		return;
+		return std::string("");
 	}
 
 	// success :)
@@ -847,8 +848,13 @@ void HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_c
 		this->log(result.str().c_str(), __FUNCTION__);
 	}
 
+	my_ulonglong vehicleId = mysql_stmt_insert_id(sqlStatement);
+	returnString << "[" << vehicleId << "]";
+
 	mysql_stmt_free_result(sqlStatement);
 	mysql_stmt_close(sqlStatement);
+
+	return returnString.str();
 }
 void HiveLib::setVehicleActive(__int64 _steamId, int _id, bool _active) {
 	std::stringstream sqlQuery;
