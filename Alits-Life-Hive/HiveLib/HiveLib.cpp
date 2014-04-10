@@ -56,10 +56,12 @@ HiveLib::HiveLib(char *_profilePath) {
 	// Init MySQL connections
 	for (int i = 0; i < HIVELIB_MYSQL_CONNECTION_COUNT; i++) {
 		MYSQL *con = mysql_init(NULL);
-
 		if (con == NULL) {
 			exit(1);
 		}
+
+		mysql_options(con, MYSQL_SET_CHARSET_NAME, "utf8");
+		mysql_options(con, MYSQL_INIT_COMMAND, "SET NAMES utf8");
 
 		this->MySQLStack.push_back(con);
 
