@@ -4,8 +4,8 @@
 
 HiveLib::HiveLib(char *_profilePath) {
 	// Disable debug
-	this->debugLogQuery = false;
-	this->debugLogResult = false;
+	this->debugLogQuery = true;
+	this->debugLogResult = true;
 
 	// Set profile path
 	const char *configFile = "AltisLifeHive.cfg";
