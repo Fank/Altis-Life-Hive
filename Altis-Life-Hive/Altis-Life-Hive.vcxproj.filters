@@ -27,9 +27,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Alits-Life-Hive.cpp">
-      <Filter>DLL</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>DLL</Filter>
     </ClCompile>
@@ -41,6 +38,9 @@
     </ClCompile>
     <ClCompile Include="HiveLib\SQF.cpp">
       <Filter>HiveLib</Filter>
+    </ClCompile>
+    <ClCompile Include="Altis-Life-Hive.cpp">
+      <Filter>DLL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
