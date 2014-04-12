@@ -1,4 +1,4 @@
-// Alits-Life-Hive.cpp : Definiert die exportierten Funktionen für die DLL-Anwendung.
+// Altis-Life-Hive.cpp : Definiert die exportierten Funktionen für die DLL-Anwendung.
 //
 
 #include "stdafx.h"
