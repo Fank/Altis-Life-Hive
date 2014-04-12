@@ -1458,7 +1458,7 @@ std::string HiveLib::getMod1Vehicles(char *_side) {
 	sqlQuery << "SELECT ";
 	sqlQuery << "`id`, `s_classname`, `i_price` ";
 	sqlQuery << "FROM `arma3battleground`.`vehicle_shop` ";
-	sqlQuery << "WHERE `side` = '" << _side << "'";
+	sqlQuery << "WHERE `s_side` = '" << _side << "'";
 	sqlQuery << ";";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
