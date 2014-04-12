@@ -547,6 +547,44 @@ void HiveLib::setPlayerReb(__int64 _steamId, int _cash, int _bank, const char *_
 	mysql_stmt_close(sqlStatement);
 	mysql_free_result(sqlResult);
 }
+void HiveLib::setPlayerCash(__int64 _steamId, int _cash) {
+	std::stringstream sqlQuery;
+	sqlQuery << "UPDATE `players` ";
+	sqlQuery << "SET `cash` = '" << _cash << "' ";
+	sqlQuery << "WHERE `playerid` = '" << _steamId << "'";
+	sqlQuery << ";";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
+
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
+		return;
+	}
+}
+void HiveLib::setPlayerBankAcc(__int64 _steamId, int _bankAcc) {
+	std::stringstream sqlQuery;
+	sqlQuery << "UPDATE `vehicles` ";
+	sqlQuery << "SET `bankacc` = '" << _bankAcc << "' ";
+	sqlQuery << "WHERE `playerid` = '" << _steamId << "'";
+	sqlQuery << ";";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE);
+
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_PLAYERUPDATE]);
+		return;
+	}
+}
 
 // Get vehicle
 std::string HiveLib::getVehicle(__int64 _steamId, int _vehicleId) {
@@ -1371,4 +1409,90 @@ void HiveLib::updateHouseInventory(int _houseObjectId, char *_inventory) {
 
 	mysql_stmt_free_result(sqlStatement);
 	mysql_stmt_close(sqlStatement);
+}
+
+std::string HiveLib::getMod1Vehicle(int _vehicleId) {
+	std::string vehicleString = "[]";
+	std::stringstream sqlQuery;
+	sqlQuery << "SELECT ";
+	sqlQuery << "`s_side`, `s_classname`, `i_price` ";
+	sqlQuery << "FROM `arma3battleground`.`vehicle_shop` ";
+	sqlQuery << "WHERE `id` = '" << _vehicleId << "'";
+	sqlQuery << ";";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return vehicleString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+	MYSQL_ROW queryRow;
+
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfVehicle;
+		sqfVehicle.push_str(queryRow[0]);
+		sqfVehicle.push_str(queryRow[1]);
+		sqfVehicle.push_str(queryRow[2]);
+		vehicleString = sqfVehicle.toArray();
+	}
+
+	if (this->debugLogResult) {
+		this->log(vehicleString.c_str(), __FUNCTION__);
+	}
+
+	mysql_free_result(queryResult);
+
+	return vehicleString;
+}
+std::string HiveLib::getMod1Vehicles(char *_side) {
+	std::string vehicleString = "[]";
+	std::stringstream sqlQuery;
+	sqlQuery << "SELECT ";
+	sqlQuery << "`id`, `s_classname`, `i_price` ";
+	sqlQuery << "FROM `arma3battleground`.`vehicle_shop` ";
+	sqlQuery << "WHERE `side` = '" << _side << "'";
+	sqlQuery << ";";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+
+	// Init statement
+	int queryState = mysql_query(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE], sqlQuery.str().c_str());
+	if (queryState != 0) {
+		this->log("mysql_query() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return vehicleString;
+	}
+
+	MYSQL_RES *queryResult = mysql_store_result(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+	MYSQL_ROW queryRow;
+
+	SQF sqfVehicles;
+	while ((queryRow = mysql_fetch_row(queryResult)) != NULL) {
+		SQF sqfVehicle;
+		sqfVehicle.push_str(queryRow[0]);
+		sqfVehicle.push_str(queryRow[1]);
+		sqfVehicle.push_str(queryRow[2]);
+		
+		sqfVehicles.push_array((char*)sqfVehicle.toArray().c_str());
+	}
+	vehicleString = sqfVehicles.toArray();
+
+	if (this->debugLogResult) {
+		this->log(vehicleString.c_str(), __FUNCTION__);
+	}
+
+	mysql_free_result(queryResult);
+
+	return vehicleString;
 }

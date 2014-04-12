@@ -229,6 +229,38 @@ std::string handler113(std::vector<std::string> _param) {
 	return "";
 }
 
+// Update player cash
+std::string handler114(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+	if (_param.size() == 3) {
+		try {
+			HiveLibrary->setPlayerCash(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
+// Update player bankacc
+std::string handler115(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+	if (_param.size() == 3) {
+		try {
+			HiveLibrary->setPlayerBankAcc(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+	return "";
+}
+
 // Get vehicles
 std::string handler200(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
@@ -438,6 +470,40 @@ std::string handler305(std::vector<std::string> _param) {
 	return "";
 }
 
+std::string handler400(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 2) {
+		try {
+			return HiveLibrary->getMod1Vehicles((char *)_param[1].c_str());
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+std::string handler401(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 2) {
+		try {
+			return HiveLibrary->getMod1Vehicle(atoi(_param[1].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
 void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 	std::vector<std::string> rawCmd = split(std::string(function), ':');
 	std::string hiveOutput = "";
@@ -466,6 +532,12 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 		}
 		else if (rawCmd[0] == "113") {
 			hiveOutput = handler113(rawCmd);
+		}
+		else if (rawCmd[0] == "114") {
+			hiveOutput = handler114(rawCmd);
+		}
+		else if (rawCmd[0] == "115") {
+			hiveOutput = handler115(rawCmd);
 		}
 		else if (rawCmd[0] == "200") {
 			hiveOutput = handler200(rawCmd);
@@ -502,6 +574,12 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 		}
 		else if (rawCmd[0] == "305") {
 			hiveOutput = handler305(rawCmd);
+		}
+		else if (rawCmd[0] == "400") {
+			hiveOutput = handler400(rawCmd);
+		}
+		else if (rawCmd[0] == "401") {
+			hiveOutput = handler401(rawCmd);
 		}
 	}
 

@@ -62,6 +62,8 @@ public:
 	void setPlayerCop(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, const char *PlayerName);
 	void setPlayerCiv(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
 	void setPlayerReb(__int64 SteamId, int Cash, int Bank, const char *Gear, const char *Licenses, bool Arrested, const char *PlayerName);
+	void setPlayerCash(__int64 SteamId, int Cash);
+	void setPlayerBankAcc(__int64 SteamId, int BankAcc);
 
 	// Get vehicle
 	std::string getVehicle(__int64 SteamId, int VehicleId);
@@ -88,6 +90,10 @@ public:
 
 	// House actions
 	void updateHouseInventory(int HouseObjectId, char *Inventory);
+
+	//
+	std::string getMod1Vehicle(int VehicleId);
+	std::string getMod1Vehicles(char *Side);
 };
 
 #endif
