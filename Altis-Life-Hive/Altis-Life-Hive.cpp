@@ -1,4 +1,4 @@
-// Alits-Life-Hive.cpp : Definiert die exportierten Funktionen für die DLL-Anwendung.
+// Altis-Life-Hive.cpp : Definiert die exportierten Funktionen für die DLL-Anwendung.
 //
 
 #include "stdafx.h"
@@ -475,9 +475,9 @@ std::string handler400(std::vector<std::string> _param) {
 		exit(1);
 	}
 
-	if (_param.size() == 2) {
+	if (_param.size() == 3) {
 		try {
-			return HiveLibrary->getMod1Vehicles((char *)_param[1].c_str());
+			return HiveLibrary->getMod1Vehicles((char *)_param[1].c_str(), atoi(_param[2].c_str()));
 		}
 		catch (...) {
 
@@ -495,6 +495,40 @@ std::string handler401(std::vector<std::string> _param) {
 	if (_param.size() == 2) {
 		try {
 			return HiveLibrary->getMod1Vehicle(atoi(_param[1].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+std::string handler402(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 3) {
+		try {
+			return HiveLibrary->getMod1Weapons((char *)_param[1].c_str(), atoi(_param[2].c_str()));
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
+std::string handler403(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 2) {
+		try {
+			return HiveLibrary->getMod1Weapon(atoi(_param[1].c_str()));
 		}
 		catch (...) {
 
@@ -580,6 +614,12 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 		}
 		else if (rawCmd[0] == "401") {
 			hiveOutput = handler401(rawCmd);
+		}
+		else if (rawCmd[0] == "402") {
+			hiveOutput = handler402(rawCmd);
+		}
+		else if (rawCmd[0] == "403") {
+			hiveOutput = handler403(rawCmd);
 		}
 	}
 

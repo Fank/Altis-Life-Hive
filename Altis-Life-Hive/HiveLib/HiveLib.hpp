@@ -91,9 +91,14 @@ public:
 	// House actions
 	void updateHouseInventory(int HouseObjectId, char *Inventory);
 
-	//
+	// Mod1 Vehicles
 	std::string getMod1Vehicle(int VehicleId);
-	std::string getMod1Vehicles(char *Side);
+	std::string getMod1Vehicles(char *Side, int VehicleType);
+
+	// Mod1 Weapons
+	std::string getMod1Weapon(int WeaponId);
+	std::string getMod1Weapons(char *Side, int WeaponType);
+
 };
 
 #endif
