@@ -143,7 +143,8 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	sqlQuery << "`cash`, `bankacc`, "; // Money
 	sqlQuery << "`coplevel`, REPLACE(`cop_licenses`, '\"', ''), REPLACE(`cop_gear`, '\"', ''), "; // COP
 	sqlQuery << "REPLACE(`civ_licenses`, '\"', ''), REPLACE(`civ_gear`, '\"', ''), "; // Civ
-	sqlQuery << "`reblevel`, REPLACE(`reb_gear`, '\"', '') "; // Reb
+	sqlQuery << "`reblevel`, REPLACE(`reb_gear`, '\"', ''), "; // Reb
+	sqlQuery << "`adaclevel`"; // Adac
 	sqlQuery << "FROM `players` ";
 	sqlQuery << "WHERE `playerid` = '" << _steamId << "'";
 	if (this->debugLogQuery) {
@@ -180,6 +181,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 		playerRow.push_str(queryRow[12]);
 		playerRow.push_str(queryRow[13]);
 		playerRow.push_str(queryRow[14]);
+		playerRow.push_str(queryRow[15]);
 		playerString = playerRow.toArray();
 		if (this->debugLogResult) {
 			this->log(playerString.c_str(), __FUNCTION__);
