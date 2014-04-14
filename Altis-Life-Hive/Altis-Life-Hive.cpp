@@ -280,9 +280,9 @@ std::string handler201(std::vector<std::string> _param) {
 		exit(1);
 	}
 
-	if (_param.size() == 7) {
+	if (_param.size() == 6) {
 		try {
-			return HiveLibrary->insertVehicle(_atoi64(_param[1].c_str()), (char *)_param[2].c_str(), (char *)_param[3].c_str(), (char *)_param[4].c_str(), atoi(_param[5].c_str()), atoi(_param[6].c_str()));
+			return HiveLibrary->insertVehicle(_atoi64(_param[1].c_str()), (char *)_param[2].c_str(), (char *)_param[3].c_str(), (char *)_param[4].c_str(), atoi(_param[5].c_str()));
 		}
 		catch (...) {
 

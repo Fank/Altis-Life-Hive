@@ -803,13 +803,13 @@ std::string HiveLib::getVehicles(__int64 _steamId, const char *_side, const char
 
 	return vehicleString;
 }
-std::string HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_className, int _color, int _plate) {
+std::string HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, char *_className, int _color) {
 	std::stringstream returnString;
 	MYSQL_STMT *sqlStatement;
 	MYSQL_BIND sqlParam[3];
 
 	std::stringstream sqlQuery;
-	sqlQuery << "INSERT INTO `vehicles` (`side`, `classname`, `type`, `pid`, `alive`, `active`, `inventory`, `color`, `plate`) VALUES ( ";
+	sqlQuery << "INSERT INTO `vehicles` (`side`, `classname`, `type`, `pid`, `alive`, `active`, `inventory`, `color`) VALUES ( ";
 	sqlQuery << "?, "; // side
 	sqlQuery << "?, "; // classname
 	sqlQuery << "?, "; // type
@@ -817,8 +817,7 @@ std::string HiveLib::insertVehicle(__int64 _steamId, char *_side, char *_type, c
 	sqlQuery << "'1', "; // alive
 	sqlQuery << "'1', "; // active
 	sqlQuery << "'[]', "; // inventory
-	sqlQuery << "'" << _color << "', "; // color
-	sqlQuery << "'" << _plate << "' "; // plate
+	sqlQuery << "'" << _color << "' "; // color
 	sqlQuery << ");";
 	if (this->debugLogQuery) {
 		this->log(sqlQuery.str().c_str(), __FUNCTION__);
