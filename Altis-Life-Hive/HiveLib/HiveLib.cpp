@@ -144,7 +144,7 @@ std::string HiveLib::getPlayer(__int64 _steamId) {
 	sqlQuery << "`coplevel`, REPLACE(`cop_licenses`, '\"', ''), REPLACE(`cop_gear`, '\"', ''), "; // COP
 	sqlQuery << "REPLACE(`civ_licenses`, '\"', ''), REPLACE(`civ_gear`, '\"', ''), "; // Civ
 	sqlQuery << "`reblevel`, REPLACE(`reb_gear`, '\"', ''), "; // Reb
-	sqlQuery << "`adaclevel`"; // Adac
+	sqlQuery << "`adaclevel` "; // Adac
 	sqlQuery << "FROM `players` ";
 	sqlQuery << "WHERE `playerid` = '" << _steamId << "'";
 	if (this->debugLogQuery) {
