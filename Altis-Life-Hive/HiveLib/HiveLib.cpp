@@ -1412,6 +1412,70 @@ void HiveLib::updateHouseInventory(int _houseObjectId, char *_inventory) {
 	mysql_stmt_close(sqlStatement);
 }
 
+void HiveLib::updateHouseInventoryArma(int _houseObjectId, char *_inventory) {
+	MYSQL_STMT *sqlStatement;
+	MYSQL_BIND sqlParam[1];
+
+	std::stringstream sqlQuery;
+	sqlQuery << "UPDATE `house` SET ";
+	sqlQuery << "`s_inventory_i` = ? ";
+	sqlQuery << "WHERE `i_object_id` = '" << _houseObjectId << "';";
+	if (this->debugLogQuery) {
+		this->log(sqlQuery.str().c_str(), __FUNCTION__);
+	}
+
+	// keep alive check
+	this->dbCheck(HIVELIB_MYSQL_CONNECTION_VEHICLE);
+
+	// Init statement
+	sqlStatement = mysql_stmt_init(this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+	if (sqlStatement == NULL) {
+		this->log("mysql_stmt_init() failed: ", __FUNCTION__, this->MySQLStack[HIVELIB_MYSQL_CONNECTION_VEHICLE]);
+		return;
+	}
+
+	// Prepare statement
+	if (mysql_stmt_prepare(sqlStatement, sqlQuery.str().c_str(), sqlQuery.str().size()) != 0) {
+		this->log("mysql_stmt_prepare() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	// Zero out the sqlParam data structures
+	memset(sqlParam, 0, sizeof(sqlParam));
+
+	// insert side
+	long unsigned int updateInventoryLength;
+	sqlParam[0].buffer_type = MYSQL_TYPE_STRING;
+	sqlParam[0].buffer_length = 32;
+	sqlParam[0].buffer = _inventory;
+	sqlParam[0].is_null = 0;
+	sqlParam[0].length = &updateInventoryLength;
+
+	// Bind buffer to statement
+	if (mysql_stmt_bind_param(sqlStatement, sqlParam) != 0) {
+		this->log("mysql_stmt_bind_param() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	updateInventoryLength = strlen(_inventory);
+
+	// Execute statement
+	if (mysql_stmt_execute(sqlStatement) != 0) {
+		this->log("mysql_stmt_execute() failed: ", __FUNCTION__, sqlStatement);
+		return;
+	}
+
+	// success :)
+	if (this->debugLogResult) {
+		std::stringstream result;
+		result << "affected rows " << mysql_stmt_affected_rows(sqlStatement);
+		this->log(result.str().c_str(), __FUNCTION__);
+	}
+
+	mysql_stmt_free_result(sqlStatement);
+	mysql_stmt_close(sqlStatement);
+}
+
 std::string HiveLib::getMod1Vehicle(int _vehicleId) {
 	std::string returnString = "[]";
 	std::stringstream sqlQuery;

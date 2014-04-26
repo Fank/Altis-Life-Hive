@@ -470,6 +470,24 @@ std::string handler305(std::vector<std::string> _param) {
 	return "";
 }
 
+// update house inventory arma
+std::string handler306(std::vector<std::string> _param) {
+	if (HiveLibrary == NULL) {
+		exit(1);
+	}
+
+	if (_param.size() == 3) {
+		try {
+			HiveLibrary->updateHouseInventoryArma(atoi(_param[1].c_str()), (char *)_param[2].c_str());
+		}
+		catch (...) {
+
+		}
+	}
+
+	return "";
+}
+
 std::string handler400(std::vector<std::string> _param) {
 	if (HiveLibrary == NULL) {
 		exit(1);
@@ -608,6 +626,9 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function) {
 		}
 		else if (rawCmd[0] == "305") {
 			hiveOutput = handler305(rawCmd);
+		}
+		else if (rawCmd[0] == "306") {
+			hiveOutput = handler306(rawCmd);
 		}
 		else if (rawCmd[0] == "400") {
 			hiveOutput = handler400(rawCmd);

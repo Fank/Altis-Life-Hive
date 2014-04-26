@@ -90,6 +90,7 @@ public:
 
 	// House actions
 	void updateHouseInventory(int HouseObjectId, char *Inventory);
+	void updateHouseInventoryArma(int HouseObjectId, char *Inventory);
 
 	// Mod1 Vehicles
 	std::string getMod1Vehicle(int VehicleId);
