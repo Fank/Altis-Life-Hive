@@ -72,7 +72,7 @@ std::string handler100(std::vector<std::string> _param) {
 		exit(1);
 	}
 	if (_param.size() == 2) {
-		return HiveLibrary->getPlayer(_atoi64(_param[1].c_str()));
+		return HiveLibrary->getPlayer(atoll(_param[1].c_str()));
 	}
 	else {
 		return "";
@@ -95,7 +95,7 @@ std::string handler101(std::vector<std::string> _param) {
 		}
 
 		try {
-			HiveLibrary->setPlayerCiv(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), (_param[6].compare("0") ? true : false), playerName.str().c_str());
+			HiveLibrary->setPlayerCiv(atoll(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), (_param[6].compare("0") ? true : false), playerName.str().c_str());
 		}
 		catch (...) {
 
@@ -120,7 +120,7 @@ std::string handler102(std::vector<std::string> _param) {
 		}
 
 		try {
-			HiveLibrary->setPlayerReb(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), (_param[6].compare("0") ? true : false), playerName.str().c_str());
+			HiveLibrary->setPlayerReb(atoll(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), (_param[6].compare("0") ? true : false), playerName.str().c_str());
 		}
 		catch (...) {
 
@@ -145,7 +145,7 @@ std::string handler103(std::vector<std::string> _param) {
 		}
 
 		try {
-			HiveLibrary->setPlayerCop(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), playerName.str().c_str());
+			HiveLibrary->setPlayerCop(atoll(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), _param[5].c_str(), playerName.str().c_str());
 		}
 		catch (...) {
 
@@ -170,7 +170,7 @@ std::string handler111(std::vector<std::string> _param) {
 		}
 
 		try {
-			HiveLibrary->setPlayerCiv(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), "[]", "[]", (_param[4].compare("0") ? true : false), playerName.str().c_str());
+			HiveLibrary->setPlayerCiv(atoll(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), "[]", "[]", (_param[4].compare("0") ? true : false), playerName.str().c_str());
 		}
 		catch (...) {
 
@@ -195,7 +195,7 @@ std::string handler112(std::vector<std::string> _param) {
 		}
 
 		try {
-			HiveLibrary->setPlayerReb(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), "[]", "[]", (_param[4].compare("0") ? true : false), playerName.str().c_str());
+			HiveLibrary->setPlayerReb(atoll(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), "[]", "[]", (_param[4].compare("0") ? true : false), playerName.str().c_str());
 		}
 		catch (...) {
 
@@ -220,7 +220,7 @@ std::string handler113(std::vector<std::string> _param) {
 		}
 
 		try {
-			HiveLibrary->setPlayerCop(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), "[]", playerName.str().c_str());
+			HiveLibrary->setPlayerCop(atoll(_param[1].c_str()), atoi(_param[2].c_str()), atoi(_param[3].c_str()), _param[4].c_str(), "[]", playerName.str().c_str());
 		}
 		catch (...) {
 
@@ -236,7 +236,7 @@ std::string handler114(std::vector<std::string> _param) {
 	}
 	if (_param.size() == 3) {
 		try {
-			HiveLibrary->setPlayerCash(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+			HiveLibrary->setPlayerCash(atoll(_param[1].c_str()), atoi(_param[2].c_str()));
 		}
 		catch (...) {
 
@@ -252,7 +252,7 @@ std::string handler115(std::vector<std::string> _param) {
 	}
 	if (_param.size() == 3) {
 		try {
-			HiveLibrary->setPlayerBankAcc(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+			HiveLibrary->setPlayerBankAcc(atoll(_param[1].c_str()), atoi(_param[2].c_str()));
 		}
 		catch (...) {
 
@@ -267,7 +267,7 @@ std::string handler200(std::vector<std::string> _param) {
 		exit(1);
 	}
 	if (_param.size() >= 4) {
-		return HiveLibrary->getVehicles(_atoi64(_param[1].c_str()), _param[2].c_str(), _param[3].c_str());
+		return HiveLibrary->getVehicles(atoll(_param[1].c_str()), _param[2].c_str(), _param[3].c_str());
 	}
 	else {
 		return "";
@@ -282,7 +282,7 @@ std::string handler201(std::vector<std::string> _param) {
 
 	if (_param.size() == 6) {
 		try {
-			return HiveLibrary->insertVehicle(_atoi64(_param[1].c_str()), (char *)_param[2].c_str(), (char *)_param[3].c_str(), (char *)_param[4].c_str(), atoi(_param[5].c_str()));
+			return HiveLibrary->insertVehicle(atoll(_param[1].c_str()), (char *)_param[2].c_str(), (char *)_param[3].c_str(), (char *)_param[4].c_str(), atoi(_param[5].c_str()));
 		}
 		catch (...) {
 
@@ -300,7 +300,7 @@ std::string handler202(std::vector<std::string> _param) {
 
 	if (_param.size() == 4) {
 		try {
-			HiveLibrary->setVehicleActive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? false : true));
+			HiveLibrary->setVehicleActive(atoll(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? false : true));
 		}
 		catch (...) {
 
@@ -318,7 +318,7 @@ std::string handler203(std::vector<std::string> _param) {
 
 	if (_param.size() == 4) {
 		try {
-			HiveLibrary->setVehicleAlive(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? false : true));
+			HiveLibrary->setVehicleAlive(atoll(_param[1].c_str()), atoi(_param[2].c_str()), (_param[3].compare("1") ? false : true));
 		}
 		catch (...) {
 
@@ -336,7 +336,7 @@ std::string handler204(std::vector<std::string> _param) {
 
 	if (_param.size() == 3) {
 		try {
-			return HiveLibrary->getVehicle(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+			return HiveLibrary->getVehicle(atoll(_param[1].c_str()), atoi(_param[2].c_str()));
 		}
 		catch (...) {
 
@@ -388,7 +388,7 @@ std::string handler301(std::vector<std::string> _param) {
 
 	if (_param.size() == 2) {
 		try {
-			return HiveLibrary->getHouses(_atoi64(_param[1].c_str()));
+			return HiveLibrary->getHouses(atoll(_param[1].c_str()));
 		}
 		catch (...) {
 
@@ -406,7 +406,7 @@ std::string handler302(std::vector<std::string> _param) {
 
 	if (_param.size() == 3) {
 		try {
-			return HiveLibrary->buyHouse(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+			return HiveLibrary->buyHouse(atoll(_param[1].c_str()), atoi(_param[2].c_str()));
 		}
 		catch (...) {
 
@@ -424,7 +424,7 @@ std::string handler303(std::vector<std::string> _param) {
 
 	if (_param.size() == 3) {
 		try {
-			return HiveLibrary->sellHouse(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+			return HiveLibrary->sellHouse(atoll(_param[1].c_str()), atoi(_param[2].c_str()));
 		}
 		catch (...) {
 
@@ -442,7 +442,7 @@ std::string handler304(std::vector<std::string> _param) {
 
 	if (_param.size() == 3) {
 		try {
-			return HiveLibrary->upgradeHouse(_atoi64(_param[1].c_str()), atoi(_param[2].c_str()));
+			return HiveLibrary->upgradeHouse(atoll(_param[1].c_str()), atoi(_param[2].c_str()));
 		}
 		catch (...) {
 
