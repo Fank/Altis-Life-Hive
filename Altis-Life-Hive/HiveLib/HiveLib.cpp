@@ -1059,7 +1059,8 @@ std::string HiveLib::getHouses(__int64 _steamId) {
 	sqlQuery << "h.`id`, ";
 	sqlQuery << "h.`i_object_id`, ";
 	sqlQuery << "h.`s_position`, ";
-	sqlQuery << "REPLACE(h.`s_inventory`, '\"', '') ";
+	sqlQuery << "REPLACE(h.`s_inventory`, '\"', ''), ";
+	sqlQuery << "REPLACE(h.`s_inventory_i`, '\"', '') ";
 	sqlQuery << "FROM ";
 	sqlQuery << "`house` h ";
 	//sqlQuery << "JOIN `houselevel` hl ON hl.`i_class_id` = h.`i_class_id` AND hl.`i_level` = h.`i_level` ";
@@ -1090,6 +1091,7 @@ std::string HiveLib::getHouses(__int64 _steamId) {
 		sqfRow.push_str(queryRow[1]);
 		sqfRow.push_str(queryRow[2]);
 		sqfRow.push_str(queryRow[3]);
+		sqfRow.push_str(queryRow[4]);
 		sqfHouses.push_array((char *)sqfRow.toArray().c_str());
 	}
 	returnString = sqfHouses.toArray();
