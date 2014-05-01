@@ -60,18 +60,20 @@ HiveLib::HiveLib(char *_profilePath) {
 			exit(1);
 		}
 
+		// Enable UTF-8 support
 		mysql_options(con, MYSQL_SET_CHARSET_NAME, "utf8");
 		mysql_options(con, MYSQL_INIT_COMMAND, "SET NAMES utf8");
 
+		// Add MySQL connection to the worker stack
 		this->MySQLStack.push_back(con);
 
+		// Connect to DB
 		if (!this->dbConnect(i)) {
 			std::stringstream errorMsg;
 			errorMsg << "Failed to connect to database: " << mysql_error(this->MySQLStack[i]);
 			this->log(errorMsg.str().c_str(), __FUNCTION__);
 			exit(1);
 		}
-
 	}
 
 	this->configuration->destroy();
